@@ -16,6 +16,24 @@ Removes worktrees that no longer exist from the registry, prunes git worktree me
 
 !source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
 
+# Help flag
+!if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo "Usage: /dots-dev:worktree-cleanup [--prune-merged]"
+  echo ""
+  echo "Clean up stale worktrees and prune registry."
+  echo ""
+  echo "Options:"
+  echo "  --prune-merged    Also delete worktrees with branches merged to main"
+  echo ""
+  echo "Actions performed:"
+  echo "  1. Prunes stale git worktree metadata"
+  echo "  2. Removes registry entries pointing to non-existent paths"
+  echo "  3. Optionally removes worktrees with merged branches"
+  echo ""
+  echo "See also: /dots-dev:doctor (comprehensive health check)"
+  exit 0
+fi
+
 !PRUNE_MERGED=false
 !for arg in "$@"; do
   if [ "$arg" = "--prune-merged" ]; then

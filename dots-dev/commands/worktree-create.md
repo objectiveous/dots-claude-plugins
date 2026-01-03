@@ -19,6 +19,29 @@ Creates one or more git worktrees in `.worktrees/` directory and opens Claude se
 
 !source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
 
+# Help flag
+!if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo "Usage: /dots-dev:worktree-create <branch1> [branch2] [...]"
+  echo ""
+  echo "Create git worktrees and open Claude sessions in iTerm tabs."
+  echo ""
+  echo "Arguments:"
+  echo "  <branch>    Branch name(s) to create worktrees for"
+  echo ""
+  echo "Behavior:"
+  echo "  - Uses existing branch if found (local or origin)"
+  echo "  - Creates new branch from current branch if not found"
+  echo "  - Opens iTerm tab with Claude session for each worktree"
+  echo "  - Registers worktrees in ~/.claude/worktree-registry.json"
+  echo ""
+  echo "Examples:"
+  echo "  /dots-dev:worktree-create feature/auth"
+  echo "  /dots-dev:worktree-create feature/api feature/ui"
+  echo ""
+  echo "See also: /dots-dev:worktree-from-bead, /dots-dev:worktree-list"
+  exit 0
+fi
+
 !CURRENT_BRANCH=$(git branch --show-current)
 !REPO_ROOT=$(get_repo_root)
 !WORKTREES_DIR=$(get_worktrees_dir)
@@ -28,7 +51,7 @@ Creates one or more git worktrees in `.worktrees/` directory and opens Claude se
   echo "Usage: /dots-dev:worktree-create <branch1> [branch2] [...]"
   echo ""
   echo "Creates worktrees and opens Claude sessions in iTerm tabs."
-  echo "Use /dots-dev:worktree-list to see existing worktrees."
+  echo "Use --help for more information."
   exit 1
 fi
 

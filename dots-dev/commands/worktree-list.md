@@ -13,6 +13,21 @@ Shows all git worktrees for the current repository with their status.
 
 !source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
 
+# Help flag
+!if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo "Usage: /dots-dev:worktree-list"
+  echo ""
+  echo "List all git worktrees for the current repository."
+  echo ""
+  echo "Shows:"
+  echo "  - Git worktree paths and branches"
+  echo "  - Registered worktrees with Claude session info"
+  echo "  - Creation timestamps"
+  echo ""
+  echo "See also: /dots-dev:worktree-status (for detailed dashboard)"
+  exit 0
+fi
+
 !REGISTRY_FILE=$(get_registry_file)
 
 !echo "Git Worktrees:"
