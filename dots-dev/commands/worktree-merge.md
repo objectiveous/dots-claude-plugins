@@ -44,19 +44,8 @@ Merges a completed worktree's branch back to main, then optionally cleans up the
   exit 0
 fi
 
-!WORKTREE_NAME=""
-!CLEANUP=false
-
-!for arg in "$@"; do
-  case "$arg" in
-    --cleanup)
-      CLEANUP=true
-      ;;
-    *)
-      WORKTREE_NAME="$arg"
-      ;;
-  esac
-done
+!WORKTREE_NAME=$(get_positional_arg "$@")
+!CLEANUP=$(has_flag "--cleanup" "$@" && echo true || echo false)
 
 !if [ -z "$WORKTREE_NAME" ]; then
   echo "Usage: /dots-dev:worktree-merge <worktree-name> [--cleanup]"

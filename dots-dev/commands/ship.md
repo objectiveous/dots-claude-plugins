@@ -41,17 +41,9 @@ Runs the complete shipping workflow: tests, linting, build, create PR, and watch
   exit 0
 fi
 
-!SKIP_TESTS=false
-!SKIP_LINT=false
-!SKIP_BUILD=false
-
-!for arg in "$@"; do
-  case "$arg" in
-    --skip-tests) SKIP_TESTS=true ;;
-    --skip-lint) SKIP_LINT=true ;;
-    --skip-build) SKIP_BUILD=true ;;
-  esac
-done
+!SKIP_TESTS=$(has_flag "--skip-tests" "$@" && echo true || echo false)
+!SKIP_LINT=$(has_flag "--skip-lint" "$@" && echo true || echo false)
+!SKIP_BUILD=$(has_flag "--skip-build" "$@" && echo true || echo false)
 
 !echo "╔══════════════════════════════════════════════════════════════╗"
 !echo "║                      Ship It Protocol                        ║"
