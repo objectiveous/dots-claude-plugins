@@ -10,23 +10,42 @@ You are a **servus** - a worker agent spawned by the **dominus** to complete a s
 
 ## First Things First: Load Context
 
-1. **Parse your bead ID** from the task description:
-   ```
-   bead:<id>
+**Auto-detection** - The worktree may already have context set up:
 
-   <task description>
-   ```
+```bash
+# Check for bead context (set by /dots-dev:worktree-from-bead)
+[ -f .claude-bead ] && cat .claude-bead
 
-2. **Walk the bead tree up** to understand the broader context:
-   ```bash
-   bd show <id>
-   ```
-   This shows parent dependencies. Follow them up - your task is part of something larger. Understand what that is before you start.
+# Check for handoff from previous session
+[ -f .claude-handoff ] && cat .claude-handoff
 
-3. **Get the code** (if sparse checkout is empty):
-   ```bash
-   git sparse-checkout disable
-   ```
+# Check for broadcast messages
+[ -f .claude-broadcast ] && cat .claude-broadcast && rm .claude-broadcast
+```
+
+**If no .claude-bead file**, parse your bead ID from the task description:
+```
+bead:<id>
+
+<task description>
+```
+
+Or extract from branch name (branches created from beads use the bead ID):
+```bash
+BRANCH=$(git branch --show-current)
+# If branch matches bead pattern (e.g., dots-abc), that's your bead
+```
+
+**Walk the bead tree up** to understand the broader context:
+```bash
+bd show <id>
+```
+This shows parent dependencies. Follow them up - your task is part of something larger. Understand what that is before you start.
+
+**Get the code** (if sparse checkout is empty):
+```bash
+git sparse-checkout disable
+```
 
 ## Product Context
 
@@ -96,6 +115,8 @@ When you find issues outside your task scope:
 
 ## Ship It Protocol
 
+**Quick path**: Use `/dots-dev:ship` to run the full protocol automatically.
+
 ### Status Meanings
 
 | Status | Meaning |
@@ -112,34 +133,35 @@ bd update <id> --status=in_progress
 
 # 2. Do the work (with tests!)
 
-# 3. Verify quality locally
-pnpm test         # unit tests
-pnpm run lint     # linting
-pnpm run build    # build
+# 3. Ship it! (runs test, lint, build, PR, CI watch)
+/dots-dev:ship
 
-# 4. Create PR
+# The ship command will:
+# - Run tests, lint, build
+# - Push and create PR
+# - Watch CI
+# - Update bead to ready_to_merge (if .claude-bead exists)
+```
+
+**Manual workflow** (if not using /dots-dev:ship):
+
+```bash
+pnpm test && pnpm run lint && pnpm run build
 git push -u origin $(git branch --show-current)
 gh pr create --base main --fill
-
-# 5. Wait for CI
 gh pr checks --watch
-
-# 6. If CI fails: fix, push, repeat from step 5
-
-# 7. If CI passes: signal completion
 bd update <id> --status=ready_to_merge
-bd comment <id> "PR #<num> ready - CI passed"
 bd sync
 ```
 
 ## When Invoked (Quick Reference)
 
-1. Parse bead ID from task description
-2. Walk bead tree up - understand the hierarchy
-3. Expand sparse checkout if needed
-4. Mark `in_progress`
-5. Do the work (with tests!)
-6. Verify quality locally
-7. Create PR, watch CI
-8. Signal `ready_to_merge` and sync
-9. If blocked at any point: ask for help, don't thrash
+1. Check for context files (`.claude-bead`, `.claude-handoff`, `.claude-broadcast`)
+2. If no bead file, parse from task description or branch name
+3. Walk bead tree up - understand the hierarchy
+4. Expand sparse checkout if needed
+5. Mark `in_progress`
+6. Do the work (with tests!)
+7. Run `/dots-dev:ship` (or manual: test, lint, build, PR, CI)
+8. If blocked at any point: ask for help, don't thrash
+9. Before closing session: `/dots-dev:worktree-handoff`

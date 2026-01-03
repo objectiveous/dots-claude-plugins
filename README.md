@@ -4,9 +4,17 @@ Claude Code plugin marketplace for Dots Workbench development and operations.
 
 ## Available Plugins
 
-| Plugin | Description |
-|--------|-------------|
-| `dots-dev` | Developer tools - worktree management, specialist agents |
+| Plugin | Description | Guide |
+|--------|-------------|-------|
+| `dots-dev` | Parallel development workflows with worktrees, bead integration, and automation | [Developer Guide](dots-dev/README.md) |
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [dots-dev/README.md](dots-dev/README.md) | Full developer guide - installation, commands, workflows, examples |
+| [CLAUDE.md](CLAUDE.md) | Project guidance for Claude Code when working in this repo |
+| [AGENTS.md](AGENTS.md) | Instructions for agents using the beads workflow |
 
 ## Installation
 
