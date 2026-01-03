@@ -1,0 +1,13 @@
+{
+  "name": "dots-claude-plugins",
+  "owner": {
+    "name": "Objectiveous"
+  },
+  "plugins": [
+    {
+      "name": "dots-dev",
+      "source": "./dots-dev",
+      "description": "Developer tools for Dots Workbench - worktree management, specialist agents, and internal workflows"
+    }
+  ]
+}
