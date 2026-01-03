@@ -1,6 +1,6 @@
 ---
-description: "Capture session context before closing a worktree"
-allowed-tools: ["Bash"]
+allowed-tools: Bash(git:*), Bash(cat:*), Bash(date:*), Bash(pwd:*)
+description: Capture session context before closing a worktree
 ---
 
 # Worktree Handoff
@@ -11,86 +11,43 @@ Captures the current session context for handoff to the next session. Records wh
 
 Run this before closing a worktree session to preserve context.
 
-## Implementation
+## Context
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
+- Current directory: !`pwd`
+- Repository root: !`git rev-parse --show-toplevel`
+- Current branch: !`git branch --show-current`
+- Git status: !`git status --short`
+- Unpushed commits: !`git log @{u}..HEAD --oneline 2>/dev/null || echo "none (or no upstream)"`
+- Last commit: !`git log -1 --format="%h %s" 2>/dev/null || echo "none"`
+- Associated bead: !`cat .claude-bead 2>/dev/null || echo "none"`
 
-# Help flag
-!if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  echo "Usage: /dots-dev:worktree-handoff"
-  echo ""
-  echo "Capture session context before closing a worktree."
-  echo ""
-  echo "Creates a .claude-handoff file containing:"
-  echo "  - Associated bead ID"
-  echo "  - Last commit"
-  echo "  - Uncommitted changes"
-  echo "  - Unpushed commits"
-  echo "  - Template sections for:"
-  echo "    - Session summary (what was done)"
-  echo "    - Remaining work"
-  echo "    - Blockers"
-  echo "    - Notes for next session"
-  echo ""
-  echo "The next Claude session will automatically see this handoff."
-  echo ""
-  echo "Must be run from within a worktree (not main repo)."
-  exit 0
-fi
+## Your task
 
-!WORKTREE_PATH=$(pwd)
-!REPO_ROOT=$(get_repo_root)
+Create a handoff file for the next session.
 
-# Check if we're in a worktree
-!if [ "$WORKTREE_PATH" = "$REPO_ROOT" ]; then
-  echo "⚠️  You're in the main repository, not a worktree."
-  echo "Run this from within a worktree to capture handoff context."
-  exit 1
-fi
+**First, verify we're in a worktree** (not the main repo). If current directory equals repo root, inform user and exit.
 
-!BRANCH=$(git branch --show-current)
-!HANDOFF_FILE="$WORKTREE_PATH/.claude-handoff"
-!TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+**Create `.claude-handoff` file** in the current directory with this template:
 
-!echo "╔══════════════════════════════════════════════════════════════╗"
-!echo "║                    Session Handoff                           ║"
-!echo "╚══════════════════════════════════════════════════════════════╝"
-!echo ""
-!echo "Capturing context for: $BRANCH"
-!echo ""
-
-# Gather git status
-!echo "Gathering git status..."
-!GIT_STATUS=$(git status --short)
-!UNPUSHED=$(git log @{u}..HEAD --oneline 2>/dev/null || echo "")
-!LAST_COMMIT=$(git log -1 --format="%h %s" 2>/dev/null || echo "none")
-
-# Check for bead
-!BEAD_ID=""
-!if [ -f "$WORKTREE_PATH/.claude-bead" ]; then
-  BEAD_ID=$(cat "$WORKTREE_PATH/.claude-bead")
-fi
-
-# Generate handoff document
-!cat > "$HANDOFF_FILE" << EOF
-# Session Handoff: $BRANCH
-Generated: $TIMESTAMP
+```markdown
+# Session Handoff: <branch-name>
+Generated: <UTC timestamp>
 
 ## Bead
-${BEAD_ID:-No bead associated}
+<bead-id or "No bead associated">
 
 ## Last Commit
-$LAST_COMMIT
+<commit hash and message>
 
 ## Uncommitted Changes
-\`\`\`
-${GIT_STATUS:-None}
-\`\`\`
+```
+<git status --short output or "None">
+```
 
 ## Unpushed Commits
-\`\`\`
-${UNPUSHED:-None (or no upstream)}
-\`\`\`
+```
+<git log output or "None">
+```
 
 ## Session Summary
 <!-- FILL IN: What was accomplished this session -->
@@ -107,26 +64,6 @@ ${UNPUSHED:-None (or no upstream)}
 ## Notes for Next Session
 <!-- FILL IN: Context, gotchas, or tips -->
 
+```
 
-EOF
-
-!echo "Created handoff file: $HANDOFF_FILE"
-!echo ""
-!echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-!cat "$HANDOFF_FILE"
-!echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-!echo ""
-!echo "Please fill in the sections marked with <!-- FILL IN -->."
-!echo ""
-!echo "The next Claude session in this worktree will automatically"
-!echo "see this handoff file and can pick up where you left off."
-!echo ""
-
-# If we have a bead, offer to update it
-!if [ -n "$BEAD_ID" ]; then
-  echo "Bead $BEAD_ID is associated with this worktree."
-  echo "Consider updating its status or adding a comment:"
-  echo ""
-  echo "  bd comment $BEAD_ID \"Session handoff: <summary>\""
-  echo ""
-fi
+**After creating the file**, display its contents and instruct the user to fill in the sections marked with `<!-- FILL IN -->`.

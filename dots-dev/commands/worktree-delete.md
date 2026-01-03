@@ -1,6 +1,6 @@
 ---
-description: "Delete git worktrees by name"
-allowed-tools: ["Bash"]
+allowed-tools: Bash(git:*), Bash(jq:*), Bash(osascript:*)
+description: Delete git worktrees by name
 ---
 
 # Delete Git Worktrees
@@ -9,46 +9,35 @@ Deletes specified worktrees, closes associated iTerm tabs, and cleans up branche
 
 **Usage:** `/dots-dev:worktree-delete <name1> [name2] [...]`
 
-If no names provided, shows available worktrees.
+## Context
 
-## Implementation
+- Existing worktrees: !`git worktree list`
+- Registry: !`cat ~/.claude/worktree-registry.json 2>/dev/null || echo "{}"`
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
+## Your task
 
-# Help flag
-!if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  echo "Usage: /dots-dev:worktree-delete <name1> [name2] [...]"
-  echo ""
-  echo "Delete git worktrees, close associated iTerm tabs, and clean up branches."
-  echo ""
-  echo "Arguments:"
-  echo "  <name>    Worktree name(s) to delete"
-  echo ""
-  echo "Actions performed:"
-  echo "  - Closes iTerm tab if registered"
-  echo "  - Removes git worktree"
-  echo "  - Deletes the branch"
-  echo "  - Removes from registry"
-  echo ""
-  echo "Examples:"
-  echo "  /dots-dev:worktree-delete feature/auth"
-  echo "  /dots-dev:worktree-delete dots-abc dots-def"
-  exit 0
-fi
+Delete the worktree(s) specified in the user's command arguments.
 
-# Show available worktrees if no args
-!if [ $# -eq 0 ]; then
-  echo "Available worktrees:"
-  echo ""
-  git worktree list
-  echo ""
-  echo "Usage: /dots-dev:worktree-delete <name1> [name2] [...]"
-  echo "Use --help for more information."
-  exit 0
-fi
+**If no names provided**, show available worktrees and usage info instead.
 
-# Process each worktree
-!delete_worktrees "$@"
+**For each worktree name provided:**
 
-!echo "Remaining worktrees:"
-!git worktree list
+1. **Find the worktree path**: Look for it in `git worktree list` output.
+
+2. **Get the branch name**: Extract from the worktree list or use `git -C <path> branch --show-current`.
+
+3. **Close iTerm tab if registered**: Check registry for a `tab_id`, then close it (may fail if already closed):
+   ```bash
+   osascript -e 'tell application "Terminal" to close (first tab of first window whose id is <tab_id>)' 2>/dev/null
+   ```
+
+4. **Remove the git worktree**: `git worktree remove <path> --force`
+
+5. **Delete the branch**: `git branch -D <branch-name>`
+
+6. **Remove from registry**:
+   ```bash
+   jq --arg path "<worktree-path>" 'del(.[$path])' ~/.claude/worktree-registry.json > ~/.claude/worktree-registry.json.tmp && mv ~/.claude/worktree-registry.json.tmp ~/.claude/worktree-registry.json
+   ```
+
+7. **Show remaining worktrees**: Display `git worktree list`.
