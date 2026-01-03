@@ -63,64 +63,13 @@ fi
 !ensure_worktrees_dir
 
 # Validate no existing worktrees conflict
-!for branch in "$@"; do
-  WORKTREE_DIR="$WORKTREES_DIR/$branch"
-  if [ -d "$WORKTREE_DIR" ]; then
-    echo "ERROR: Worktree directory already exists: $WORKTREE_DIR"
-    echo "Use /dots-dev:worktree-delete $branch to remove it first."
-    exit 1
-  fi
-done
+!validate_no_existing_worktrees "$WORKTREES_DIR" "$@" || exit 1
 
 # Create worktrees
-!for branch in "$@"; do
-  BRANCH_NAME="$branch"
-  WORKTREE_DIR="$WORKTREES_DIR/$branch"
-
-  echo ""
-  echo "Creating worktree: $WORKTREE_DIR"
-
-  # Determine branch source
-  BRANCH_STATUS=$(branch_exists "$BRANCH_NAME")
-
-  case "$BRANCH_STATUS" in
-    "local")
-      echo "Using existing local branch: $BRANCH_NAME"
-      git worktree add "$WORKTREE_DIR" "$BRANCH_NAME"
-      ;;
-    "remote")
-      echo "Using existing remote branch: origin/$BRANCH_NAME"
-      git worktree add "$WORKTREE_DIR" "$BRANCH_NAME"
-      ;;
-    *)
-      echo "Creating new branch: $BRANCH_NAME (from $CURRENT_BRANCH)"
-      git worktree add -b "$BRANCH_NAME" "$WORKTREE_DIR" "$CURRENT_BRANCH"
-      ;;
-  esac
-
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to create worktree for: $branch"
-    exit 1
-  fi
-done
+!create_worktrees "$CURRENT_BRANCH" "$WORKTREES_DIR" "$@" || exit 1
 
 # Open iTerm tabs and register worktrees
-!ensure_registry
-
-!for branch in "$@"; do
-  WORKTREE_DIR="$WORKTREES_DIR/$branch"
-  ABS_PATH="$(cd "$WORKTREE_DIR" && pwd)"
-
-  echo "Opening iTerm tab for: $branch"
-  TAB_ID=$(open_iterm_claude_session "$WORKTREE_DIR")
-
-  # Store tab ID locally
-  echo "$TAB_ID" > "$WORKTREE_DIR/.claude-tab-id"
-
-  # Register globally
-  register_worktree "$ABS_PATH" "$branch" "$TAB_ID"
-  echo "Registered worktree: $branch (tab ID: $TAB_ID)"
-done
+!open_and_register_worktrees "$WORKTREES_DIR" "$@"
 
 !echo ""
 !echo "Worktrees created:"

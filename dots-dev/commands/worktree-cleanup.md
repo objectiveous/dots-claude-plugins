@@ -34,12 +34,7 @@ Removes worktrees that no longer exist from the registry, prunes git worktree me
   exit 0
 fi
 
-!PRUNE_MERGED=false
-!for arg in "$@"; do
-  if [ "$arg" = "--prune-merged" ]; then
-    PRUNE_MERGED=true
-  fi
-done
+!PRUNE_MERGED=$(has_flag "--prune-merged" "$@" && echo true || echo false)
 
 !echo "Cleaning up worktrees..."
 !echo ""
