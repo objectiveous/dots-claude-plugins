@@ -1,6 +1,6 @@
 ---
-description: "Dashboard showing all worktrees with git status and bead info"
-allowed-tools: ["Bash"]
+allowed-tools: Bash(git:*), Bash(jq:*), Bash(cat:*)
+description: Dashboard showing all worktrees with git status and bead info
 ---
 
 # Worktree Status Dashboard
@@ -9,91 +9,39 @@ Shows all git worktrees with their current state: git status, active bead, uncom
 
 **Usage:** `/dots-dev:worktree-status`
 
-## Implementation
+## Context
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
+- Repository root: !`git rev-parse --show-toplevel`
+- Worktrees (porcelain): !`git worktree list --porcelain`
+- Registry: !`cat ~/.claude/worktree-registry.json 2>/dev/null || echo "{}"`
 
-# Help flag
-!if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  echo "Usage: /dots-dev:worktree-status"
-  echo ""
-  echo "Dashboard showing all worktrees with their current state."
-  echo ""
-  echo "For each worktree, shows:"
-  echo "  - Branch name and path"
-  echo "  - Uncommitted changes count"
-  echo "  - Unpushed commits count"
-  echo "  - Associated bead (from .claude-bead or branch name)"
-  echo "  - Creation timestamp"
-  echo ""
-  echo "See also: /dots-dev:worktree-list (simpler view)"
-  exit 0
-fi
+## Your task
 
-!echo "╔══════════════════════════════════════════════════════════════╗"
-!echo "║                   Worktree Status Dashboard                  ║"
-!echo "╚══════════════════════════════════════════════════════════════╝"
-!echo ""
+Display a dashboard showing all worktrees with their status.
 
-!REPO_ROOT=$(get_repo_root)
+**For each worktree** (excluding the main repo root):
 
-# Get all worktrees
-!git worktree list --porcelain | while read line; do
-  if [[ "$line" == worktree* ]]; then
-    WORKTREE_PATH="${line#worktree }"
+1. **Get basic info**:
+   - Path from `git worktree list`
+   - Branch: `git -C <path> branch --show-current`
 
-    # Skip the main worktree
-    if [ "$WORKTREE_PATH" = "$REPO_ROOT" ]; then
-      continue
-    fi
+2. **Get git status**:
+   - Uncommitted changes count: `git -C <path> status --porcelain | wc -l`
+   - Staged changes count: `git -C <path> diff --cached --numstat | wc -l`
+   - Unpushed commits: `git -C <path> log @{u}..HEAD --oneline 2>/dev/null | wc -l`
 
-    # Get branch name
-    BRANCH=$(git -C "$WORKTREE_PATH" branch --show-current 2>/dev/null || echo "detached")
+3. **Check for bead association**:
+   - Look for `.claude-bead` file in worktree
+   - Or extract bead ID from branch name if it matches `dots-*` pattern
 
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "📁 $BRANCH"
-    echo "   Path: $WORKTREE_PATH"
+4. **Get registry info**: Creation timestamp and tab ID from `~/.claude/worktree-registry.json`
 
-    # Git status summary
-    CHANGES=$(git -C "$WORKTREE_PATH" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-    STAGED=$(git -C "$WORKTREE_PATH" diff --cached --numstat 2>/dev/null | wc -l | tr -d ' ')
-    UNPUSHED=$(git -C "$WORKTREE_PATH" log @{u}..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
+**Format the output** as a dashboard with:
+- Branch name as header
+- Path
+- Clean/dirty status with change counts
+- Unpushed commits indicator
+- Bead association if any
+- Creation timestamp
 
-    if [ "$CHANGES" -gt 0 ]; then
-      echo "   📝 $CHANGES uncommitted changes ($STAGED staged)"
-    else
-      echo "   ✅ Clean working tree"
-    fi
-
-    if [ "$UNPUSHED" -gt 0 ]; then
-      echo "   ⬆️  $UNPUSHED commits to push"
-    fi
-
-    # Check for active bead (look for bead ID in branch name or .claude-bead file)
-    if [ -f "$WORKTREE_PATH/.claude-bead" ]; then
-      BEAD_ID=$(cat "$WORKTREE_PATH/.claude-bead")
-      echo "   🔮 Bead: $BEAD_ID"
-    elif [[ "$BRANCH" =~ (dots-[a-z0-9]+) ]]; then
-      echo "   🔮 Bead (from branch): ${BASH_REMATCH[1]}"
-    fi
-
-    # Check registry for session info
-    REGISTRY_FILE=$(get_registry_file)
-    if [ -f "$REGISTRY_FILE" ]; then
-      TAB_ID=$(jq -r --arg path "$WORKTREE_PATH" '.[$path].tab_id // ""' "$REGISTRY_FILE" 2>/dev/null)
-      CREATED=$(jq -r --arg path "$WORKTREE_PATH" '.[$path].created // ""' "$REGISTRY_FILE" 2>/dev/null)
-      if [ -n "$CREATED" ]; then
-        echo "   🕐 Created: $CREATED"
-      fi
-    fi
-
-    echo ""
-  fi
-done
-
-# Summary
-!echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-!WORKTREE_COUNT=$(git worktree list | wc -l | tr -d ' ')
-!echo "Total worktrees: $WORKTREE_COUNT (including main)"
-!echo ""
-!echo "Commands: /dots-dev:worktree-sync, /dots-dev:worktree-merge, /dots-dev:doctor"
+**End with a summary**: Total worktree count and helpful command references.

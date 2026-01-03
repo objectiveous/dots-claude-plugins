@@ -1,6 +1,6 @@
 ---
-description: "Pull latest changes from main into a worktree"
-allowed-tools: ["Bash"]
+allowed-tools: Bash(git:*)
+description: Pull latest changes from main into a worktree
 ---
 
 # Sync Worktree with Main
@@ -11,110 +11,35 @@ Pulls latest changes from main branch into the current or specified worktree.
 
 If no worktree name provided, syncs the current worktree.
 
-## Implementation
+## Context
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
+- Current directory: !`pwd`
+- Repository root: !`git rev-parse --show-toplevel`
+- Current branch: !`git branch --show-current`
+- Existing worktrees: !`git worktree list`
 
-# Help flag
-!if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  echo "Usage: /dots-dev:worktree-sync [worktree-name]"
-  echo ""
-  echo "Pull latest changes from main into a worktree via rebase."
-  echo ""
-  echo "Arguments:"
-  echo "  [worktree-name]    Optional. If omitted, syncs current worktree."
-  echo ""
-  echo "Behavior:"
-  echo "  - Fetches origin/main"
-  echo "  - Stashes uncommitted changes if present"
-  echo "  - Rebases onto origin/main"
-  echo "  - Restores stashed changes"
-  echo ""
-  echo "Examples:"
-  echo "  /dots-dev:worktree-sync              # Sync current worktree"
-  echo "  /dots-dev:worktree-sync feature/auth # Sync specific worktree"
-  exit 0
-fi
+## Your task
 
-!WORKTREE_NAME="$1"
-!REPO_ROOT=$(get_repo_root)
-!WORKTREES_DIR=$(get_worktrees_dir)
+Sync a worktree with the latest changes from main.
 
-# Determine which worktree to sync
-!if [ -n "$WORKTREE_NAME" ]; then
-  WORKTREE_PATH=$(find_worktree_path "$WORKTREE_NAME")
-  if [ -z "$WORKTREE_PATH" ]; then
-    WORKTREE_PATH="$WORKTREES_DIR/$WORKTREE_NAME"
-  fi
-  if [ ! -d "$WORKTREE_PATH" ]; then
-    echo "ERROR: Worktree '$WORKTREE_NAME' not found"
-    echo ""
-    echo "Available worktrees:"
-    git worktree list
-    exit 1
-  fi
-else
-  WORKTREE_PATH=$(pwd)
-  # Check if we're in a worktree (not main repo)
-  if [ "$WORKTREE_PATH" = "$REPO_ROOT" ]; then
-    echo "ERROR: You're in the main repository, not a worktree."
-    echo "Either specify a worktree name or run from within a worktree."
-    echo ""
-    echo "Usage: /dots-dev:worktree-sync [worktree-name]"
-    exit 1
-  fi
-fi
+**Determine the target worktree:**
+- If a worktree name is provided, find its path in `.worktrees/<name>` or `git worktree list`
+- If no name provided, use the current directory (but verify it's not the main repo root)
 
-!BRANCH=$(git -C "$WORKTREE_PATH" branch --show-current)
-!echo "Syncing worktree: $WORKTREE_PATH"
-!echo "Branch: $BRANCH"
-!echo ""
+**Required steps:**
 
-# First, fetch latest from origin
-!echo "Fetching from origin..."
-!git -C "$WORKTREE_PATH" fetch origin main
+1. **Get the branch name**: `git -C <worktree-path> branch --show-current`
 
-# Check for uncommitted changes
-!CHANGES=$(git -C "$WORKTREE_PATH" status --porcelain | wc -l | tr -d ' ')
-!if [ "$CHANGES" -gt 0 ]; then
-  echo ""
-  echo "⚠️  You have uncommitted changes:"
-  git -C "$WORKTREE_PATH" status --short
-  echo ""
-  echo "Stashing changes before rebase..."
-  git -C "$WORKTREE_PATH" stash push -m "Auto-stash before sync $(date +%Y-%m-%d_%H:%M:%S)"
-  STASHED=true
-else
-  STASHED=false
-fi
+2. **Fetch latest from origin**: `git -C <worktree-path> fetch origin main`
 
-# Rebase onto main
-!echo ""
-!echo "Rebasing $BRANCH onto origin/main..."
-!if git -C "$WORKTREE_PATH" rebase origin/main; then
-  echo ""
-  echo "✅ Successfully rebased onto main"
-else
-  echo ""
-  echo "❌ Rebase failed - conflicts detected"
-  echo ""
-  echo "Resolve conflicts in: $WORKTREE_PATH"
-  echo "Then run: git rebase --continue"
-  echo "Or abort: git rebase --abort"
-  exit 1
-fi
+3. **Check for uncommitted changes**: Run `git -C <worktree-path> status --porcelain`
+   - If changes exist, show them and stash: `git -C <worktree-path> stash push -m "Auto-stash before sync"`
+   - Remember to restore the stash later
 
-# Restore stashed changes if any
-!if [ "$STASHED" = true ]; then
-  echo ""
-  echo "Restoring stashed changes..."
-  if git -C "$WORKTREE_PATH" stash pop; then
-    echo "✅ Stashed changes restored"
-  else
-    echo "⚠️  Conflict applying stashed changes"
-    echo "Your stash is preserved. Resolve manually with: git stash pop"
-  fi
-fi
+4. **Rebase onto main**: `git -C <worktree-path> rebase origin/main`
+   - If conflicts occur, inform user how to resolve with `git rebase --continue` or `git rebase --abort`
 
-!echo ""
-!echo "Sync complete for: $BRANCH"
+5. **Restore stashed changes** (if any): `git -C <worktree-path> stash pop`
+   - Warn if conflicts occur applying stash
+
+6. **Show success message** with branch name.
