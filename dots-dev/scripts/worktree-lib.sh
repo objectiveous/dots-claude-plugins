@@ -233,6 +233,14 @@ create_worktrees() {
       echo "ERROR: Failed to create worktree for: $branch"
       return 1
     fi
+
+    # Copy .claude directory to worktree if it exists
+    local repo_root
+    repo_root=$(get_repo_root)
+    if [ -d "$repo_root/.claude" ]; then
+      cp -r "$repo_root/.claude" "$worktree_dir/"
+      echo "Copied .claude/ to worktree"
+    fi
   done
   return 0
 }
