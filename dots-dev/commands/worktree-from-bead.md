@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git:*), Bash(bd:*), Bash(mkdir:*), Bash(jq:*), Bash(osascript:*)
+allowed-tools: Bash(git:*), Bash(bd:*), Bash(mkdir:*), Bash(jq:*), Bash(osascript:*), Bash(cat:*)
 description: Create a worktree from a bead ID with auto-context
 ---
 
@@ -23,7 +23,7 @@ Create a worktree from the bead ID provided in the user's command arguments.
 
 **Required steps:**
 
-1. **Verify bead exists**: Run `bd show <bead-id> --json` and check it returns valid data. If not found, show available beads with `bd ready` or `bd list --status=open`.
+1. **Verify bead exists**: Run `bd show <bead-id>` and check it returns valid data. If not found, show available beads with `bd ready` or `bd list --status=open`.
 
 2. **Check if worktree already exists**: If `.worktrees/<bead-id>` exists, inform the user and offer to just open an iTerm tab for it.
 
@@ -39,9 +39,28 @@ Create a worktree from the bead ID provided in the user's command arguments.
 
 7. **Copy .claude directory**: If it exists in repo root, copy to the worktree.
 
-8. **Claim the bead**: Run `bd update <bead-id> --status=in_progress`
+8. **Write dispatch file**: Create `.worktrees/<bead-id>/.servus-dispatch.md` with the mission briefing:
+   ```bash
+   BEAD_INFO=$(bd show <bead-id>)
+   cat > .worktrees/<bead-id>/.servus-dispatch.md << DISPATCH
+   # Mission: <bead-id>
 
-9. **Open iTerm tab**: Use AppleScript to open a new iTerm tab with Claude:
+   $BEAD_INFO
+
+   ## Instructions
+
+   1. Complete this task according to the description above
+   2. Make atomic commits as you progress
+   3. When finished, run: /dots-dev:worktree-handoff
+   4. The Dominus will review and merge your work
+
+   Strength and honor, Servus. Execute with precision.
+   DISPATCH
+   ```
+
+9. **Claim the bead**: Run `bd update <bead-id> --status=in_progress`
+
+10. **Open iTerm tab**: Use AppleScript to open a new iTerm tab with Claude:
    ```bash
    osascript -e 'tell application "iTerm"
      activate
@@ -54,4 +73,4 @@ Create a worktree from the bead ID provided in the user's command arguments.
    end tell'
    ```
 
-10. **Show results**: Confirm worktree creation with path and bead info.
+11. **Show results**: Confirm worktree creation with path and bead info.
