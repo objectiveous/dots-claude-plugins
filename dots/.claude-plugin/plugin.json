@@ -1,0 +1,5 @@
+{
+  "name": "dots",
+  "description": "Dominus operations for managing Servi in the Dots App",
+  "commands": ["vibe-spawn", "vibe-list", "vibe-kill", "vibe-status"]
+}

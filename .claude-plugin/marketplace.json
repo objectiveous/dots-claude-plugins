@@ -8,6 +8,11 @@
       "name": "dots-dev",
       "source": "./dots-dev",
       "description": "Developer tools for Dots Workbench - worktree management, specialist agents, and internal workflows"
+    },
+    {
+      "name": "dots",
+      "source": "./dots",
+      "description": "Dominus operations for managing Servi in the Dots App - vibe spawning, monitoring, and status reporting"
     }
   ]
 }

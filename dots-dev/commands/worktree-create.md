@@ -40,12 +40,12 @@ Create worktrees for the branch name(s) provided in the user's command arguments
 
      $BEAD_INFO
 
-     ## First Steps
-     1. **Signal status**: Call \`report_status("<branch-name>", "working")\` to notify Dominus you're active
-     2. Run \`bd update <branch-name> --status=in_progress\` to claim the work
-     3. Implement the required changes
-     4. When blocked, call \`report_status("<branch-name>", "blocked", "reason here")\`
-     5. When complete, call \`report_status("<branch-name>", "done")\` and run \`/dots-dev:ship\`
+     ## Instructions
+
+     1. Complete this task according to the description above
+     2. Make atomic commits as you progress
+     3. When finished, run: /dots-dev:worktree-handoff
+     4. The Dominus will review and merge your work
 
      Strength and honor, Servus. Execute with precision.
      DISPATCH
@@ -67,14 +67,7 @@ Create worktrees for the branch name(s) provided in the user's command arguments
    b. Execute the claude command in the session:
       - Use `mcp__tmux__execute-command` to run `claude` in the new session
 
-   c. **Register in Dots UI**: Source worktree-lib.sh and call `register_dots_session`:
-      ```bash
-      source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
-      register_dots_session "<session-name>" "<bead-id>" "<absolute-worktree-path>" "<branch-name>"
-      ```
-      This makes the session visible in the Dots UI sidebar.
-
-   d. Report the session name to the user so they can attach if needed:
+   c. Report the session name to the user so they can attach if needed:
       - `tmux attach -t <session-name>` or use `/dots-dev:servus-attach`
 
    **If tmux is NOT available (fallback to iTerm):**
