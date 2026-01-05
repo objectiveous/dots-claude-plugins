@@ -1,5 +1,10 @@
 {
   "name": "dots",
   "description": "Dominus operations for managing Servi in the Dots App",
-  "commands": ["vibe-spawn", "vibe-list", "vibe-kill", "vibe-status"]
+  "commands": [
+    "./commands/vibe-spawn.md",
+    "./commands/vibe-list.md",
+    "./commands/vibe-kill.md",
+    "./commands/vibe-status.md"
+  ]
 }
