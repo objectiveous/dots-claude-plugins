@@ -11,7 +11,7 @@ Checks repository health: stale worktrees, uncommitted changes, unpushed commits
 
 ## Implementation
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/swe-lib.sh"
+!source "*/scripts/swe-lib.sh"
 
 !echo "╔══════════════════════════════════════════════════════════════╗"
 !echo "║                    Repository Health Check                   ║"

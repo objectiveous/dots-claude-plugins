@@ -17,7 +17,7 @@ Re-attaches iTerm2 to existing tmux sessions after restart.
 
 ## Implementation
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/swe-lib.sh"
+!source "*/scripts/swe-lib.sh"
 
 # Help flag
 !if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

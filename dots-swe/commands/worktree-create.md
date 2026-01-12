@@ -23,7 +23,7 @@ Creates one or more git worktrees in `.worktrees/` directory and spawns Claude s
 
 ## Implementation
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/swe-lib.sh"
+!source "*/scripts/swe-lib.sh"
 
 # Help flag
 !if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

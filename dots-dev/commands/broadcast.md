@@ -11,7 +11,7 @@ Sends a message to all active worktree Claude sessions. Useful for coordination 
 
 ## Implementation
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
+!source "*/scripts/worktree-lib.sh"
 
 # Help flag
 !if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

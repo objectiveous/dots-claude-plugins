@@ -15,7 +15,7 @@ Step-by-step tutorial teaching the dots-dev parallel development workflow.
 
 ## Implementation
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-lib.sh"
+!source "*/scripts/worktree-lib.sh"
 
 !REPO_ROOT=$(get_repo_root)
 !STATE_FILE="$REPO_ROOT/.claude-tutorial-state"

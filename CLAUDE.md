@@ -34,7 +34,7 @@ Commands use `!` prefix for shell execution lines and `!source` for imports.
 
 **Agents** (`agents/*.md`): Specialist agents with frontmatter defining `name`, `description`, and `tools` list. These are persona definitions for domain-specific work.
 
-**Scripts** (`scripts/*.sh`): Shared bash functions sourced by commands via `!source "${CLAUDE_PLUGIN_ROOT}/scripts/file.sh"`.
+**Scripts** (`scripts/*.sh`): Shared bash functions sourced by commands via `!source "*/scripts/file.sh"`.
 
 ## Available Plugin: dots-dev
 

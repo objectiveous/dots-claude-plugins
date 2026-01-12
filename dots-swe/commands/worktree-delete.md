@@ -17,7 +17,7 @@ Deletes specified worktrees, closes associated iTerm tabs, and cleans up branche
 
 ## Implementation
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/swe-lib.sh"
+!source "*/scripts/swe-lib.sh"
 
 # Help flag
 !if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

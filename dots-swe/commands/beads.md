@@ -11,7 +11,7 @@ Shows available work from beads and provides a quick reference for beads command
 
 ## Implementation
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/swe-lib.sh"
+!source "*/scripts/swe-lib.sh"
 
 !echo "╔══════════════════════════════════════════════════════════════╗"
 !echo "║                   Available Work (Beads)                     ║"

@@ -11,7 +11,7 @@ Shows all git worktrees with their current state: git status, active bead, uncom
 
 ## Implementation
 
-!source "${CLAUDE_PLUGIN_ROOT}/scripts/swe-lib.sh"
+!source "*/scripts/swe-lib.sh"
 
 !echo "╔══════════════════════════════════════════════════════════════╗"
 !echo "║                  Worktree Dashboard                          ║"
