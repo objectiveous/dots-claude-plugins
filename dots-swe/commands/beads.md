@@ -1,7 +1,14 @@
 ---
 allowed-tools: Bash(bd:*), Bash(cat:*)
 description: Show available work and beads command reference
+execution-mode: atomic-bash
 ---
+
+<claude-instructions>
+1. The bash script below will execute AUTOMATICALLY by the skill framework
+2. DO NOT manually run individual bash commands from this skill
+3. Wait for the skill execution output and report the result to the user
+</claude-instructions>
 
 # Beads - Available Work
 

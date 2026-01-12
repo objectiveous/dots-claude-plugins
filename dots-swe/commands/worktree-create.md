@@ -1,7 +1,18 @@
 ---
 allowed-tools: Bash(git:*), Bash(mkdir:*), Bash(source:*), Bash(osascript:*), Bash(cat:*), Bash(jq:*), Bash(date:*)
 description: Create git worktrees with Claude sessions in iTerm
+execution-mode: atomic-bash
 ---
+
+<claude-instructions>
+CRITICAL: This skill spawns NEW sessions in worktrees. DO NOT work in the current directory.
+
+1. The bash script below will execute AUTOMATICALLY by the skill framework
+2. DO NOT manually run individual bash commands from this skill
+3. Wait for the skill execution output
+4. Report the result to the user and STOP - work happens in the NEW sessions
+5. NEVER continue working in the current directory after this skill runs
+</claude-instructions>
 
 # Create Git Worktrees
 

@@ -1,7 +1,17 @@
 ---
 allowed-tools: Bash(tmux:*), Bash(osascript:*), Bash(source:*)
 description: Re-attach iTerm2 to existing tmux sessions
+execution-mode: atomic-bash
 ---
+
+<claude-instructions>
+CRITICAL: This skill opens iTerm2 windows for tmux sessions.
+
+1. The bash script below will execute AUTOMATICALLY by the skill framework
+2. DO NOT manually run individual bash commands from this skill
+3. Wait for the skill execution output
+4. Report the result to the user - the iTerm2 window will open automatically
+</claude-instructions>
 
 # Re-attach to Worktree Sessions
 

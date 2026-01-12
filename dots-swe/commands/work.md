@@ -1,7 +1,20 @@
 ---
 allowed-tools: Bash(git:*), Bash(bd:*), Bash(mkdir:*), Bash(jq:*), Bash(osascript:*), Bash(cat:*)
 description: Start work from a bead - creates worktree and claims the task
+execution-mode: atomic-bash
 ---
+
+<claude-instructions>
+CRITICAL: This skill spawns a NEW session in a worktree. DO NOT work in the current directory.
+
+1. The bash script below will execute AUTOMATICALLY by the skill framework
+2. DO NOT manually run individual bash commands from this skill
+3. Wait for the skill execution output
+4. Report the result to the user and STOP - work happens in the NEW session
+5. NEVER continue working in the current directory after this skill runs
+
+The `/dots-swe:work` command ALWAYS creates/opens a worktree, regardless of bead status.
+</claude-instructions>
 
 # Start Work from Bead
 
