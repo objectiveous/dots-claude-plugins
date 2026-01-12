@@ -29,7 +29,7 @@ Creates a worktree from a bead ID, claims the bead, and sets up context for the 
 
 ## Implementation
 
-!source "*/scripts/swe-lib.sh"
+!source "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/swe-lib.sh 2>/dev/null | head -1)"
 
 # Help flag
 !if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

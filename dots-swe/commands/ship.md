@@ -23,7 +23,7 @@ Runs the complete shipping workflow: tests, linting, build, create PR, and watch
 
 ## Implementation
 
-!source "*/scripts/swe-lib.sh"
+!source "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/swe-lib.sh 2>/dev/null | head -1)"
 
 # Help flag
 !if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

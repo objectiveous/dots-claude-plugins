@@ -18,7 +18,7 @@ Shows available work from beads and provides a quick reference for beads command
 
 ## Implementation
 
-!source "*/scripts/swe-lib.sh"
+!source "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/swe-lib.sh 2>/dev/null | head -1)"
 
 !echo "╔══════════════════════════════════════════════════════════════╗"
 !echo "║                   Available Work (Beads)                     ║"
