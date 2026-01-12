@@ -19,6 +19,7 @@ Software engineering tools for Claude Code - worktree management, beads integrat
 | `/dots-swe:worktree-list` | List all worktrees |
 | `/dots-swe:worktree-sync [name]` | Sync worktree with main branch |
 | `/dots-swe:worktree-status` | Dashboard showing all worktrees |
+| `/dots-swe:worktree-attach [session]` | Re-attach iTerm2 to tmux sessions |
 | `/dots-swe:worktree-delete <name>` | Delete worktree(s) and clean up |
 
 ### Beads Integration
@@ -84,6 +85,12 @@ git commit -m "feat: Add feature"
 **Context Files:**
 - `.swe-bead` - Bead ID for current worktree
 - `.swe-context` - Task context and quick reference
+- `.tmux-session` - tmux session name for this worktree
+
+**tmux Integration:**
+- Worktrees from the same epic share a tmux session (appear as tabs)
+- Re-attach after iTerm2 restart: `/dots-swe:worktree-attach <session>`
+- Sessions persist even when iTerm2 closes
 
 ## Learn More
 

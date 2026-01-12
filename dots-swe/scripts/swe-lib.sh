@@ -26,6 +26,97 @@ get_current_bead() {
   fi
 }
 
+# =============================================================================
+# tmux + iTerm2 integration
+# =============================================================================
+
+# Claude options for new sessions
+get_claude_options() {
+  echo "--dangerously-skip-permissions --model opus"
+}
+
+# Get tmux session name from epic/feature ID
+# yap-tsd.1 → yap-tsd (groups features under epic)
+get_tmux_session_name() {
+  local id="$1"
+  # Extract epic portion: yap-tsd.1 → yap-tsd
+  echo "${id%.*}"
+}
+
+# Check if tmux session exists
+tmux_session_exists() {
+  local session="$1"
+  tmux has-session -t "$session" 2>/dev/null
+}
+
+# Create tmux session with first window
+create_tmux_session() {
+  local session="$1"
+  local window_name="$2"
+  local working_dir="$3"
+
+  tmux new-session -d -s "$session" -n "$window_name" -c "$working_dir"
+}
+
+# Add window to existing tmux session
+add_tmux_window() {
+  local session="$1"
+  local window_name="$2"
+  local working_dir="$3"
+
+  tmux new-window -t "$session:" -n "$window_name" -c "$working_dir"
+}
+
+# Start Claude in a tmux window
+start_claude_in_window() {
+  local session="$1"
+  local window_name="$2"
+  local claude_opts
+  claude_opts=$(get_claude_options)
+
+  tmux send-keys -t "$session:$window_name" "claude $claude_opts" Enter
+}
+
+# Attach iTerm2 to tmux session using control mode
+attach_iterm_to_tmux() {
+  local session="$1"
+
+  osascript <<EOF
+tell application "iTerm2"
+    activate
+    create window with default profile
+    tell current session of current window
+        write text "tmux -CC attach -t '$session'"
+    end tell
+end tell
+EOF
+}
+
+# Open worktree in tmux (creates session/window as needed)
+open_tmux_worktree() {
+  local worktree_path="$1"
+  local bead_id="$2"
+  local window_name="${3:-$bead_id}"
+  local abs_path session_name
+
+  abs_path="$(cd "$worktree_path" && pwd)"
+  session_name=$(get_tmux_session_name "$bead_id")
+
+  if tmux_session_exists "$session_name"; then
+    # Add window to existing session
+    add_tmux_window "$session_name" "$window_name" "$abs_path"
+  else
+    # Create new session with this as first window
+    create_tmux_session "$session_name" "$window_name" "$abs_path"
+  fi
+
+  # Start Claude in the window
+  start_claude_in_window "$session_name" "$window_name"
+
+  # Return session name for tracking
+  echo "$session_name"
+}
+
 # Ensure worktrees directory exists and is in .gitignore
 ensure_worktrees_dir() {
   local repo_root worktrees_dir
@@ -92,23 +183,12 @@ get_worktree_info() {
   fi
 }
 
-# Open iTerm tab with Claude session
+# Open iTerm tab with Claude session (legacy wrapper for tmux)
 open_iterm_claude_session() {
   local worktree_path="$1"
-  local abs_path
-
-  abs_path="$(cd "$worktree_path" && pwd)"
-
-  osascript -e "tell application \"iTerm\"
-    activate
-    tell current window
-      create tab with default profile
-      tell current session
-        write text \"cd '$abs_path' && claude\"
-      end tell
-    end tell
-    return id of current window
-  end tell"
+  local bead_id
+  bead_id=$(basename "$worktree_path")
+  open_tmux_worktree "$worktree_path" "$bead_id"
 }
 
 # Close iTerm tab by ID
@@ -249,11 +329,12 @@ create_worktrees() {
   return 0
 }
 
-# Open iTerm tabs and register worktrees
+# Open tmux windows and register worktrees
 open_and_register_worktrees() {
   local worktrees_dir="$1"
   shift
-  local branch worktree_dir abs_path tab_id
+  local branch worktree_dir abs_path session_name
+  local first_session=""
 
   ensure_registry
 
@@ -261,16 +342,26 @@ open_and_register_worktrees() {
     worktree_dir="$worktrees_dir/$branch"
     abs_path="$(cd "$worktree_dir" && pwd)"
 
-    echo "Opening iTerm tab for: $branch"
-    tab_id=$(open_iterm_claude_session "$worktree_dir")
+    echo "Creating tmux window for: $branch"
+    session_name=$(open_tmux_worktree "$worktree_dir" "$branch")
 
-    # Store tab ID locally
-    echo "$tab_id" > "$worktree_dir/.claude-tab-id"
+    # Track first session for attachment
+    [ -z "$first_session" ] && first_session="$session_name"
+
+    # Store session name locally
+    echo "$session_name" > "$worktree_dir/.tmux-session"
 
     # Register globally
-    register_worktree "$abs_path" "$branch" "$tab_id"
-    echo "Registered worktree: $branch (tab ID: $tab_id)"
+    register_worktree "$abs_path" "$branch" "$session_name"
+    echo "Registered worktree: $branch (session: $session_name)"
   done
+
+  # Attach iTerm2 to the tmux session
+  if [ -n "$first_session" ]; then
+    echo ""
+    echo "Attaching iTerm2 to tmux session: $first_session"
+    attach_iterm_to_tmux "$first_session"
+  fi
 }
 
 # Delete multiple worktrees
