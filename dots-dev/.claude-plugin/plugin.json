@@ -1,6 +1,6 @@
 {
   "name": "dots-dev",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Developer tools for Dots Workbench - worktree management, specialist agents, and internal workflows",
   "author": {
     "name": "Objectiveous"
