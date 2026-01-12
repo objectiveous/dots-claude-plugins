@@ -1,5 +1,6 @@
 {
   "name": "dots",
+  "version": "1.0.0",
   "description": "Dominus operations for managing Servi in the Dots App",
   "commands": [
     "./commands/vibe-spawn.md",

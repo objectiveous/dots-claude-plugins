@@ -6,13 +6,20 @@ Claude Code plugin marketplace for Dots Workbench development and operations.
 
 | Plugin | For | Context | Description |
 |--------|-----|---------|-------------|
+| **`dots-swe`** | Any developer | Any project | Worktree management with tmux + iTerm2, beads integration |
 | **`dots-dev`** | Human developers | Outside Dots app | Worktree workflows with iTerm, bead integration |
 | **`dots`** | Dominus (Claude) | Inside Dots app | Vibe management via tmux + dots-mcp |
 
 ### Which Plugin Should I Use?
 
+**Use `dots-swe` if you are:**
+- Working on any project (not just Dots)
+- Want tmux session persistence (re-attach after iTerm2 restart)
+- Using beads for issue tracking
+- Want features from the same epic grouped as tabs
+
 **Use `dots-dev` if you are:**
-- A human developer working on Dots
+- A human developer working specifically on Dots
 - Running Claude Code in a terminal (iTerm, Terminal.app)
 - Working outside the Dots Workbench application
 - Creating worktrees for feature development
@@ -24,6 +31,39 @@ Claude Code plugin marketplace for Dots Workbench development and operations.
 - Managing vibes (worker sessions) programmatically
 
 ## Plugin Details
+
+### dots-swe (Software Engineering)
+
+General-purpose plugin for any project. Uses tmux for session persistence with iTerm2 integration.
+
+```bash
+# Install
+claude plugin install dots-swe@dots-claude-plugins
+
+# Commands
+/dots-swe:work <bead-id>              # Start work from bead (creates worktree, claims task)
+/dots-swe:worktree-create <branch>    # Create worktree(s) with Claude sessions
+/dots-swe:worktree-list               # List all worktrees
+/dots-swe:worktree-status             # Dashboard showing all worktrees
+/dots-swe:worktree-attach [session]   # Re-attach iTerm2 to tmux sessions
+/dots-swe:worktree-sync [name]        # Sync worktree with main branch
+/dots-swe:worktree-delete <name>      # Delete worktree(s) and clean up
+/dots-swe:check                       # Run quality gates: test, lint, build
+/dots-swe:ship                        # Full protocol: test, lint, build, PR, CI watch
+/dots-swe:beads                       # Show available work
+/dots-swe:doctor                      # Health check
+/dots-swe:help                        # Show all commands
+```
+
+**tmux Integration:**
+- Features from the same epic share a tmux session (appear as iTerm2 tabs)
+- Sessions persist when iTerm2 closes
+- Re-attach with `/dots-swe:worktree-attach <session>`
+- Claude starts with `--dangerously-skip-permissions --model opus`
+
+**iTerm2 Setup Required:**
+- Settings > General > tmux > "Open tmux windows as: Tabs in a new window"
+- Settings > General > tmux > "Automatically bury the tmux client session after connecting"
 
 ### dots-dev (Human Development)
 
