@@ -128,6 +128,43 @@ When working on a task from beads:
 - Don't commit secrets or credentials
 - If you notice security issues, fix them or create beads
 
+## Commit Message Format
+
+**ALWAYS use Conventional Commits format:**
+
+```
+type(scope): description
+
+Optional body with context or reasoning.
+
+Co-Authored-By: Claude <name> <noreply@anthropic.com>
+```
+
+**Valid types:**
+- `feat:` - new features
+- `fix:` - bug fixes
+- `docs:` - documentation changes
+- `chore:` - maintenance (version bumps, deps, config)
+- `refactor:` - code changes that don't add features or fix bugs
+- `test:` - adding or updating tests
+
+**Scope** is optional but recommended - use the plugin, module, or component name:
+- `feat(dots-swe): add new command`
+- `fix(auth): handle expired tokens`
+
+**Description** should be:
+- Lowercase (no capital first letter)
+- Imperative mood ("add" not "added" or "adds")
+- No period at end
+- Concise (50 chars or less)
+
+**Examples:**
+```bash
+git commit -m "feat(api): add user authentication endpoint"
+git commit -m "fix: resolve null pointer in config parser"
+git commit -m "chore: bump version to 1.2.0"
+```
+
 ## Using Beads for Task Management
 
 If beads is available, use it to track work:
@@ -187,7 +224,7 @@ Quick reference for dots-swe commands:
 
 # 4. Commit with clear messages
 git add .
-git commit -m "feat: Add feature X
+git commit -m "feat: add feature X
 
 Implements Y by doing Z. Chose approach A over B because C."
 
