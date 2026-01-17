@@ -33,16 +33,31 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   exit 0
 fi
 
-BEAD_ID="$1"
+# Parse arguments
+FORMAT="text"
+BEAD_ID=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --format=json)
+      FORMAT="json"
+      shift
+      ;;
+    *)
+      BEAD_ID="$1"
+      shift
+      ;;
+  esac
+done
+
 TERMINAL=$(get_swe_terminal)
 WORKTREES_DIR=$(get_worktrees_dir)
 
 # If no bead specified, list available sessions
 if [ -z "$BEAD_ID" ]; then
-  echo "📋 Available sessions to continue:"
-  echo ""
-
-  FOUND=0
+  # Collect session data
+  sessions_json="["
+  first_session=true
 
   if [ "$TERMINAL" = "ghostty" ]; then
     # List zmx sessions (format: session_name=xxx\tpid=xxx\tclients=xxx)
@@ -54,24 +69,34 @@ if [ -z "$BEAD_ID" ]; then
         # Parse session name and PID
         session=$(echo "$line" | cut -f1 | cut -d= -f2)
         pid=$(echo "$line" | cut -f2 | cut -d= -f2)
-        FOUND=$((FOUND + 1))
 
         # Get working directory from process PID
         worktree_path=$(lsof -p "$pid" 2>/dev/null | grep cwd | awk '{print $9}')
 
+        bead_id=""
+        title=""
+        has_worktree="false"
+
         if [ -n "$worktree_path" ] && [ -d "$worktree_path" ]; then
+          has_worktree="true"
           # Get bead info if available
           if [ -f "$worktree_path/.swe-bead" ]; then
-            BEAD=$(cat "$worktree_path/.swe-bead")
-            TITLE=$(bd show "$BEAD" 2>/dev/null | head -2 | tail -1 | sed 's/^[[:space:]]*//')
-            echo "  • $session"
-            [ -n "$TITLE" ] && echo "    $TITLE"
-          else
-            echo "  • $session"
+            bead_id=$(cat "$worktree_path/.swe-bead")
+            title=$(bd show "$bead_id" 2>/dev/null | head -2 | tail -1 | sed 's/^[[:space:]]*//')
           fi
-        else
-          echo "  • $session (no worktree)"
         fi
+
+        # Add to JSON array
+        if [ "$first_session" = true ]; then
+          first_session=false
+        else
+          sessions_json+=","
+        fi
+
+        # Escape double quotes in title
+        title_escaped=$(echo "$title" | sed 's/"/\\"/g')
+
+        sessions_json+="{\"session\":\"$session\",\"bead\":\"$bead_id\",\"title\":\"$title_escaped\",\"has_worktree\":$has_worktree}"
       done <<< "$SESSIONS"
     fi
   else
@@ -80,35 +105,74 @@ if [ -z "$BEAD_ID" ]; then
     if [ -n "$SESSIONS" ]; then
       while IFS= read -r session pid; do
         [ -z "$session" ] && continue
-        FOUND=$((FOUND + 1))
 
         # Get working directory from process PID
         worktree_path=$(lsof -p "$pid" 2>/dev/null | grep cwd | awk '{print $9}')
 
+        bead_id=""
+        title=""
+        has_worktree="false"
+
         if [ -n "$worktree_path" ] && [ -d "$worktree_path" ]; then
+          has_worktree="true"
           # Get bead info if available
           if [ -f "$worktree_path/.swe-bead" ]; then
-            BEAD=$(cat "$worktree_path/.swe-bead")
-            TITLE=$(bd show "$BEAD" 2>/dev/null | head -2 | tail -1 | sed 's/^[[:space:]]*//')
-            echo "  • $session"
-            [ -n "$TITLE" ] && echo "    $TITLE"
-          else
-            echo "  • $session"
+            bead_id=$(cat "$worktree_path/.swe-bead")
+            title=$(bd show "$bead_id" 2>/dev/null | head -2 | tail -1 | sed 's/^[[:space:]]*//')
           fi
-        else
-          echo "  • $session (no worktree)"
         fi
+
+        # Add to JSON array
+        if [ "$first_session" = true ]; then
+          first_session=false
+        else
+          sessions_json+=","
+        fi
+
+        # Escape double quotes in title
+        title_escaped=$(echo "$title" | sed 's/"/\\"/g')
+
+        sessions_json+="{\"session\":\"$session\",\"bead\":\"$bead_id\",\"title\":\"$title_escaped\",\"has_worktree\":$has_worktree}"
       done <<< "$SESSIONS"
     fi
   fi
 
-  if [ $FOUND -eq 0 ]; then
-    echo "  (no active sessions)"
-    echo ""
-    echo "Start new work with: /dots-swe:start <bead-id>"
+  sessions_json+="]"
+
+  # Output based on format
+  if [ "$FORMAT" = "json" ]; then
+    echo "$sessions_json"
   else
+    # Text format output
+    echo "📋 Available sessions to continue:"
     echo ""
-    echo "Continue with: /dots-swe:continue <session-name>"
+
+    count=$(echo "$sessions_json" | grep -o '"session"' | wc -l)
+
+    if [ "$count" -eq 0 ]; then
+      echo "  (no active sessions)"
+      echo ""
+      echo "Start new work with: /dots-swe:start <bead-id>"
+    else
+      # Parse and display sessions
+      echo "$sessions_json" | grep -o '{[^}]*}' | while read -r obj; do
+        session=$(echo "$obj" | grep -o '"session":"[^"]*"' | cut -d'"' -f4)
+        title=$(echo "$obj" | grep -o '"title":"[^"]*"' | cut -d'"' -f4)
+        has_worktree=$(echo "$obj" | grep -o '"has_worktree":[^,}]*' | cut -d':' -f2)
+
+        if [ "$has_worktree" = "true" ] && [ -n "$title" ]; then
+          echo "  • $session"
+          echo "    $title"
+        elif [ "$has_worktree" = "true" ]; then
+          echo "  • $session"
+        else
+          echo "  • $session (no worktree)"
+        fi
+      done
+
+      echo ""
+      echo "Continue with: /dots-swe:continue <session-name>"
+    fi
   fi
   exit 0
 fi
