@@ -46,18 +46,23 @@ if [ -z "$BEAD_ID" ]; then
 
   if [ "$TERMINAL" = "ghostty" ]; then
     # List zmx sessions (format: session_name=xxx\tpid=xxx\tclients=xxx)
-    SESSIONS=$(zmx list 2>/dev/null | cut -f1 | cut -d= -f2)
+    SESSIONS=$(zmx list 2>/dev/null)
     if [ -n "$SESSIONS" ]; then
-      while IFS= read -r session; do
-        [ -z "$session" ] && continue
+      while IFS= read -r line; do
+        [ -z "$line" ] && continue
+
+        # Parse session name and PID
+        session=$(echo "$line" | cut -f1 | cut -d= -f2)
+        pid=$(echo "$line" | cut -f2 | cut -d= -f2)
         FOUND=$((FOUND + 1))
 
-        # Check if there's a worktree for this session
-        WORKTREE_PATH="$WORKTREES_DIR/$session"
-        if [ -d "$WORKTREE_PATH" ]; then
+        # Get working directory from process PID
+        worktree_path=$(lsof -p "$pid" 2>/dev/null | grep cwd | awk '{print $9}')
+
+        if [ -n "$worktree_path" ] && [ -d "$worktree_path" ]; then
           # Get bead info if available
-          if [ -f "$WORKTREE_PATH/.swe-bead" ]; then
-            BEAD=$(cat "$WORKTREE_PATH/.swe-bead")
+          if [ -f "$worktree_path/.swe-bead" ]; then
+            BEAD=$(cat "$worktree_path/.swe-bead")
             TITLE=$(bd show "$BEAD" 2>/dev/null | head -2 | tail -1 | sed 's/^[[:space:]]*//')
             echo "  • $session"
             [ -n "$TITLE" ] && echo "    $TITLE"
@@ -70,13 +75,29 @@ if [ -z "$BEAD_ID" ]; then
       done <<< "$SESSIONS"
     fi
   else
-    # List tmux sessions
-    SESSIONS=$(tmux list-sessions -F "#{session_name}" 2>/dev/null)
+    # List tmux sessions (get session name and pane PID)
+    SESSIONS=$(tmux list-sessions -F "#{session_name} #{pane_pid}" 2>/dev/null)
     if [ -n "$SESSIONS" ]; then
-      while IFS= read -r session; do
+      while IFS= read -r session pid; do
         [ -z "$session" ] && continue
         FOUND=$((FOUND + 1))
-        echo "  • $session"
+
+        # Get working directory from process PID
+        worktree_path=$(lsof -p "$pid" 2>/dev/null | grep cwd | awk '{print $9}')
+
+        if [ -n "$worktree_path" ] && [ -d "$worktree_path" ]; then
+          # Get bead info if available
+          if [ -f "$worktree_path/.swe-bead" ]; then
+            BEAD=$(cat "$worktree_path/.swe-bead")
+            TITLE=$(bd show "$BEAD" 2>/dev/null | head -2 | tail -1 | sed 's/^[[:space:]]*//')
+            echo "  • $session"
+            [ -n "$TITLE" ] && echo "    $TITLE"
+          else
+            echo "  • $session"
+          fi
+        else
+          echo "  • $session (no worktree)"
+        fi
       done <<< "$SESSIONS"
     fi
   fi
