@@ -1,6 +1,6 @@
 {
   "name": "dots-claude-plugins",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "owner": {
     "name": "Objectiveous"
   },
@@ -18,7 +18,7 @@
     {
       "name": "dots-swe",
       "source": "./dots-swe",
-      "description": "Software engineering tools for Claude Code - worktree management, beads integration, and ship workflows for independent developers"
+      "description": "Software engineering tools for Claude Code - work management, beads integration, and ship workflows for independent developers"
     }
   ]
 }

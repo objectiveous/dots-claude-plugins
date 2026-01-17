@@ -92,6 +92,167 @@ end tell
 EOF
 }
 
+# Attach Ghostty to tmux session
+attach_ghostty_to_tmux() {
+  local session="$1"
+
+  osascript <<EOF
+tell application "Ghostty"
+    activate
+end tell
+delay 0.3
+tell application "System Events"
+    tell process "Ghostty"
+        keystroke "n" using command down
+        delay 0.2
+        keystroke "tmux attach -t '$session'"
+        keystroke return
+    end tell
+end tell
+EOF
+}
+
+# =============================================================================
+# zmx + Ghostty integration
+# =============================================================================
+
+# Check if zmx session exists
+zmx_session_exists() {
+  local session="$1"
+  zmx list 2>/dev/null | grep -q "session_name=$session"
+}
+
+# Kill zmx session if it exists
+kill_zmx_session() {
+  local session="$1"
+  if zmx_session_exists "$session"; then
+    zmx kill "$session" 2>/dev/null
+    echo "Killed zmx session: $session"
+  fi
+}
+
+# Open new Ghostty window with zmx session
+open_ghostty_zmx_window() {
+  local worktree_path="$1"
+  local session_name="$2"
+  local abs_path claude_opts
+
+  abs_path="$(cd "$worktree_path" && pwd)"
+  claude_opts=$(get_claude_options)
+
+  # Open new Ghostty window with zmx attach command
+  open -na Ghostty --args --working-directory="$abs_path" -e zmx attach "$session_name" claude $claude_opts
+}
+
+# Open new Ghostty tab with zmx session
+open_ghostty_zmx_tab() {
+  local worktree_path="$1"
+  local session_name="$2"
+  local abs_path claude_opts
+
+  abs_path="$(cd "$worktree_path" && pwd)"
+  claude_opts=$(get_claude_options)
+
+  # Use AppleScript to open new tab and run command
+  osascript <<EOF
+tell application "ghostty"
+    activate
+end tell
+delay 0.2
+tell application "System Events"
+    tell process "ghostty"
+        keystroke "t" using command down
+        delay 0.3
+        keystroke "cd '$abs_path' && zmx attach '$session_name' claude $claude_opts"
+        keystroke return
+    end tell
+end tell
+EOF
+}
+
+# Open Ghostty with zmx session (window or tab based on SWE_GHOSTTY_MODE)
+# Set SWE_GHOSTTY_MODE=tab for tabs, default is window
+open_ghostty_zmx_session() {
+  local worktree_path="$1"
+  local session_name="$2"
+  local mode="${SWE_GHOSTTY_MODE:-window}"
+
+  case "$mode" in
+    tab)
+      open_ghostty_zmx_tab "$worktree_path" "$session_name"
+      ;;
+    *)
+      open_ghostty_zmx_window "$worktree_path" "$session_name"
+      ;;
+  esac
+}
+
+# Start Claude in background zmx session (for batch operations)
+start_zmx_session_background() {
+  local worktree_path="$1"
+  local session_name="$2"
+  local abs_path claude_opts
+
+  abs_path="$(cd "$worktree_path" && pwd)"
+  claude_opts=$(get_claude_options)
+
+  # zmx run starts session without attaching
+  (cd "$abs_path" && zmx run "$session_name" claude $claude_opts)
+}
+
+# =============================================================================
+# Terminal detection and dispatch
+# =============================================================================
+
+# Get current terminal from TERM_PROGRAM
+# iTerm2 sets: iTerm.app
+# Ghostty sets: ghostty
+get_swe_terminal() {
+  case "${TERM_PROGRAM:-}" in
+    ghostty) echo "ghostty" ;;
+    *)       echo "iterm" ;;
+  esac
+}
+
+# Attach terminal to tmux session (dispatcher) - for iTerm only now
+attach_terminal_to_tmux() {
+  local session="$1"
+  local terminal
+  terminal=$(get_swe_terminal)
+
+  case "$terminal" in
+    ghostty)
+      # Ghostty uses zmx, not tmux - this shouldn't be called
+      echo "Warning: Ghostty should use zmx, not tmux" >&2
+      attach_ghostty_to_tmux "$session"
+      ;;
+    *)
+      attach_iterm_to_tmux "$session"
+      ;;
+  esac
+}
+
+# Open worktree session - main dispatcher
+# Uses zmx+Ghostty for Ghostty, tmux+AppleScript for iTerm
+open_worktree_session() {
+  local worktree_path="$1"
+  local session_name="$2"
+  local terminal
+
+  terminal=$(get_swe_terminal)
+
+  case "$terminal" in
+    ghostty)
+      # Opens new Ghostty window/tab with zmx session
+      open_ghostty_zmx_session "$worktree_path" "$session_name"
+      ;;
+    *)
+      # iTerm: use tmux in background + AppleScript to attach
+      open_tmux_worktree "$worktree_path" "$session_name"
+      ;;
+  esac
+}
+
 # Open worktree in tmux (creates session/window as needed)
 open_tmux_worktree() {
   local worktree_path="$1"
@@ -329,44 +490,61 @@ create_worktrees() {
   return 0
 }
 
-# Open tmux windows and register worktrees
+# Open sessions and register worktrees
+# For Ghostty: uses zmx (starts in background, then attaches to first)
+# For iTerm: uses tmux (creates windows, then attaches via AppleScript)
 open_and_register_worktrees() {
   local worktrees_dir="$1"
   shift
   local branch worktree_dir abs_path session_name
   local first_session=""
+  local terminal
 
   ensure_registry
+  terminal=$(get_swe_terminal)
 
   for branch in "$@"; do
     worktree_dir="$worktrees_dir/$branch"
     abs_path="$(cd "$worktree_dir" && pwd)"
 
-    echo "Creating tmux window for: $branch"
-    session_name=$(open_tmux_worktree "$worktree_dir" "$branch")
+    if [ "$terminal" = "ghostty" ]; then
+      echo "Creating zmx session for: $branch"
+      start_zmx_session_background "$worktree_dir" "$branch"
+      session_name="$branch"
+      echo "$session_name" > "$worktree_dir/.zmx-session"
+    else
+      echo "Creating tmux window for: $branch"
+      session_name=$(open_tmux_worktree "$worktree_dir" "$branch")
+      echo "$session_name" > "$worktree_dir/.tmux-session"
+    fi
 
     # Track first session for attachment
     [ -z "$first_session" ] && first_session="$session_name"
-
-    # Store session name locally
-    echo "$session_name" > "$worktree_dir/.tmux-session"
 
     # Register globally
     register_worktree "$abs_path" "$branch" "$session_name"
     echo "Registered worktree: $branch (session: $session_name)"
   done
 
-  # Attach iTerm2 to the tmux session
+  # Attach to the first session
   if [ -n "$first_session" ]; then
     echo ""
-    echo "Attaching iTerm2 to tmux session: $first_session"
-    attach_iterm_to_tmux "$first_session"
+    if [ "$terminal" = "ghostty" ]; then
+      local mode="${SWE_GHOSTTY_MODE:-window}"
+      echo "Opening Ghostty $mode for zmx session: $first_session"
+      echo "(Other sessions running in background - use 'zmx attach <name>' to switch)"
+      worktree_dir="$worktrees_dir/$first_session"
+      open_ghostty_zmx_session "$worktree_dir" "$first_session"
+    else
+      echo "Attaching $terminal to tmux session: $first_session"
+      attach_terminal_to_tmux "$first_session"
+    fi
   fi
 }
 
 # Delete multiple worktrees
 delete_worktrees() {
-  local worktree_name worktree_path branch_name tab_id
+  local worktree_name worktree_path branch_name tab_id zmx_session
 
   for worktree_name in "$@"; do
     echo "Processing worktree: $worktree_name"
@@ -383,14 +561,27 @@ delete_worktrees() {
     # Get branch name
     branch_name=$(get_worktree_branch "$worktree_path")
 
-    # Get tab ID from registry
+    # Get tab ID from registry (for iTerm/tmux)
     tab_id=$(get_worktree_info "$worktree_path" "tab_id")
+
+    # Check for zmx session
+    zmx_session=""
+    if [ -f "$worktree_path/.zmx-session" ]; then
+      zmx_session=$(cat "$worktree_path/.zmx-session")
+    fi
 
     echo "  Branch: $branch_name"
     echo "  Path: $worktree_path"
-    echo "  Tab ID: ${tab_id:-none}"
+    [ -n "$tab_id" ] && echo "  tmux session: $tab_id"
+    [ -n "$zmx_session" ] && echo "  zmx session: $zmx_session"
 
-    # Close terminal tab if we have a tab ID
+    # Kill zmx session if exists
+    if [ -n "$zmx_session" ]; then
+      echo "  Killing zmx session..."
+      kill_zmx_session "$zmx_session"
+    fi
+
+    # Close iTerm tab if we have a tab ID (legacy tmux)
     if [ -n "$tab_id" ]; then
       echo "  Closing terminal tab..."
       close_iterm_tab "$tab_id"

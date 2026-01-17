@@ -5,37 +5,33 @@ allowed-tools: ["Bash"]
 
 # dots-swe Plugin Help
 
-Software engineering tools for Claude Code - worktree management, beads integration, and ship workflows.
+Software engineering tools for Claude Code - work management, beads integration, and ship workflows.
 
 **Usage:** `/dots-swe:help`
 
 ## Commands
 
-### Worktree Management
+### Work Management
 
 | Command | Description |
 |---------|-------------|
-| `/dots-swe:worktree-create <branch>` | Create worktree(s) with Claude sessions |
-| `/dots-swe:worktree-list` | List all worktrees |
-| `/dots-swe:worktree-sync [name]` | Sync worktree with main branch |
-| `/dots-swe:worktree-status` | Dashboard showing all worktrees |
-| `/dots-swe:worktree-attach [session]` | Re-attach iTerm2 to tmux sessions |
-| `/dots-swe:worktree-delete <name>` | Delete worktree(s) and clean up |
+| `/dots-swe:start <bead-id>` | Start work on a bead (creates workspace, opens Claude) |
+| `/dots-swe:continue [bead-id]` | Continue work (reattach to existing session) |
+| `/dots-swe:finish [bead-id]` | Finish work (verify PR merged, cleanup) |
 
-### Beads Integration
+### Quality & Shipping
 
 | Command | Description |
 |---------|-------------|
-| `/dots-swe:work <bead-id>` | Start work from bead (creates worktree, claims task) |
-| `/dots-swe:beads` | Show available work and beads reference |
-
-### Ship Workflow
-
-| Command | Description |
-|---------|-------------|
-| `/dots-swe:check` | Run quality gates: test, lint, build (no PR) |
+| `/dots-swe:check` | Run quality gates: test, lint, build |
 | `/dots-swe:ship` | Full protocol: test, lint, build, PR, CI watch |
-| `/dots-swe:doctor` | Health check for repository and worktrees |
+| `/dots-swe:doctor` | Health check for repository |
+
+### Beads
+
+| Command | Description |
+|---------|-------------|
+| `/dots-swe:beads` | Show available work and beads reference |
 
 ### Help
 
@@ -43,64 +39,55 @@ Software engineering tools for Claude Code - worktree management, beads integrat
 |---------|-------------|
 | `/dots-swe:help` | Show this help |
 
-## Agents
+## Workflow
 
-### SWE Agent
-
-**Invoke:** Load the `/swe` agent from the dots-swe plugin
-
-**Description:** Senior software engineer agent for independent development work. Focuses on best practices, quality code, and pragmatic solutions.
-
-**Use when:** Working on development tasks that require:
-- Code implementation with tests
-- Following quality standards
-- Independent problem-solving
-- Beads task tracking
-
-## Quick Start
-
-**Starting work from a bead:**
-```bash
-/dots-swe:work dots-abc
-# Creates worktree, claims bead, opens Claude session
+```
+┌─────────────────────────────────────────────────────────────┐
+│  bd ready          # Find available work                    │
+│       ↓                                                     │
+│  /dots-swe:start dots-abc    # Start work                   │
+│       ↓                                                     │
+│  ... work in new Claude session ...                         │
+│       ↓                                                     │
+│  /dots-swe:ship              # Create PR, watch CI          │
+│       ↓                                                     │
+│  ... PR reviewed and merged ...                             │
+│       ↓                                                     │
+│  /dots-swe:finish            # Cleanup                      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Creating worktrees manually:**
+**If you need to step away:**
 ```bash
-/dots-swe:worktree-create feature/auth
-# Creates worktree and opens Claude session
+# Detach with ctrl+\ (Ghostty) or close window (iTerm)
+# Later, continue with:
+/dots-swe:continue dots-abc
 ```
 
-**Quality workflow:**
+## Terminal Support
+
+**Auto-detected via TERM_PROGRAM:**
+
+| Terminal | Session Manager | Detach | Reattach |
+|----------|----------------|--------|----------|
+| Ghostty | zmx | ctrl+\ | `/dots-swe:continue` or `zmx attach <id>` |
+| iTerm2 | tmux | close window | `/dots-swe:continue` or tmux attach |
+
+**Options for Ghostty:**
+- `--window` (default): Open in new window
+- `--tab`: Open in new tab
+
+## Context Files
+
+In each workspace:
+- `.swe-bead` - Bead ID
+- `.swe-context` - Task details and checklist
+- `.zmx-session` or `.tmux-session` - Session name
+
+## More Help
+
 ```bash
-/dots-swe:check  # Verify tests, lint, build locally
-git commit -m "feat: Add feature"
-/dots-swe:ship   # Push, create PR, watch CI
-```
-
-## Configuration
-
-**Registry:** Worktrees are tracked in `~/.claude/swe-registry.json`
-
-**Context Files:**
-- `.swe-bead` - Bead ID for current worktree
-- `.swe-context` - Task context and quick reference
-- `.tmux-session` - tmux session name for this worktree
-
-**tmux Integration:**
-- Worktrees from the same epic share a tmux session (appear as tabs)
-- Re-attach after iTerm2 restart: `/dots-swe:worktree-attach <session>`
-- Sessions persist even when iTerm2 closes
-
-## Learn More
-
-For detailed command help, use:
-```bash
-/dots-swe:<command> --help
-```
-
-Example:
-```bash
+/dots-swe:start --help
+/dots-swe:finish --help
 /dots-swe:ship --help
-/dots-swe:work --help
 ```
