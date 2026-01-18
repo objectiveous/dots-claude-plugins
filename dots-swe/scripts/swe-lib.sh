@@ -396,6 +396,142 @@ get_worktree_branch() {
 }
 
 # =============================================================================
+# Language Detection and Quality Gates
+# =============================================================================
+
+# Detect project type and return test/lint/build commands
+# Priority: Makefile > language-specific lock files
+# Returns: Shell-parseable environment variables
+detect_project_commands() {
+  local test_cmd=""
+  local lint_cmd=""
+  local build_cmd=""
+  local project_type="unknown"
+
+  # Priority 1: Makefile (universal interface)
+  if [ -f "Makefile" ] || [ -f "makefile" ] || [ -f "GNUmakefile" ]; then
+    project_type="make"
+    # Check for standard make targets
+    grep -qE "^test:" Makefile makefile GNUmakefile 2>/dev/null && test_cmd="make test"
+    grep -qE "^lint:" Makefile makefile GNUmakefile 2>/dev/null && lint_cmd="make lint"
+    grep -qE "^build:" Makefile makefile GNUmakefile 2>/dev/null && build_cmd="make build"
+    # Alternative target names
+    [ -z "$test_cmd" ] && grep -qE "^check:" Makefile makefile GNUmakefile 2>/dev/null && test_cmd="make check"
+    [ -z "$lint_cmd" ] && grep -qE "^fmt:" Makefile makefile GNUmakefile 2>/dev/null && lint_cmd="make fmt"
+  fi
+
+  # Priority 2: JavaScript/TypeScript (pnpm > npm > yarn)
+  if [ -z "$test_cmd" ] && [ -f "pnpm-lock.yaml" ]; then
+    project_type="pnpm"
+    test_cmd="pnpm test"
+    lint_cmd="pnpm run lint"
+    build_cmd="pnpm run build"
+  elif [ -z "$test_cmd" ] && [ -f "package-lock.json" ]; then
+    project_type="npm"
+    test_cmd="npm test"
+    lint_cmd="npm run lint"
+    build_cmd="npm run build"
+  elif [ -z "$test_cmd" ] && [ -f "yarn.lock" ]; then
+    project_type="yarn"
+    test_cmd="yarn test"
+    lint_cmd="yarn lint"
+    build_cmd="yarn build"
+  fi
+
+  # Priority 3: Rust
+  if [ -z "$test_cmd" ] && [ -f "Cargo.toml" ]; then
+    project_type="cargo"
+    test_cmd="cargo test"
+    lint_cmd="cargo clippy"
+    build_cmd="cargo build --release"
+  fi
+
+  # Priority 4: Swift (SPM > Xcode)
+  if [ -z "$test_cmd" ] && [ -f "Package.swift" ]; then
+    project_type="swift-spm"
+    test_cmd="swift test"
+    lint_cmd="" # SwiftLint would need to be configured separately
+    build_cmd="swift build"
+  elif [ -z "$test_cmd" ] && (ls *.xcodeproj 2>/dev/null || ls *.xcworkspace 2>/dev/null); then
+    project_type="xcode"
+    # Xcode requires scheme name - try to detect it
+    if [ -d *.xcworkspace ]; then
+      local workspace=$(ls -1 *.xcworkspace | head -1)
+      test_cmd="xcodebuild test -workspace \"$workspace\" -scheme \$(xcodebuild -list -workspace \"$workspace\" 2>/dev/null | grep -A 1 'Schemes:' | tail -1 | xargs)"
+      build_cmd="xcodebuild -workspace \"$workspace\" -scheme \$(xcodebuild -list -workspace \"$workspace\" 2>/dev/null | grep -A 1 'Schemes:' | tail -1 | xargs)"
+    elif [ -d *.xcodeproj ]; then
+      local project=$(ls -1 *.xcodeproj | head -1)
+      test_cmd="xcodebuild test -project \"$project\" -scheme \$(xcodebuild -list -project \"$project\" 2>/dev/null | grep -A 1 'Schemes:' | tail -1 | xargs)"
+      build_cmd="xcodebuild -project \"$project\" -scheme \$(xcodebuild -list -project \"$project\" 2>/dev/null | grep -A 1 'Schemes:' | tail -1 | xargs)"
+    fi
+  fi
+
+  # Priority 5: Python
+  if [ -z "$test_cmd" ]; then
+    if [ -f "pyproject.toml" ]; then
+      project_type="python"
+      # Check for pytest
+      if grep -q "pytest" pyproject.toml 2>/dev/null; then
+        test_cmd="pytest"
+      elif [ -f "setup.py" ] || [ -d "tests" ]; then
+        test_cmd="python -m pytest"
+      fi
+      # Check for ruff or flake8
+      if grep -q "ruff" pyproject.toml 2>/dev/null; then
+        lint_cmd="ruff check ."
+      elif command -v flake8 >/dev/null 2>&1; then
+        lint_cmd="flake8"
+      fi
+      # Build with pip/poetry
+      if grep -q "poetry" pyproject.toml 2>/dev/null; then
+        build_cmd="poetry build"
+      else
+        build_cmd="python -m build"
+      fi
+    elif [ -f "requirements.txt" ] || [ -f "setup.py" ]; then
+      project_type="python"
+      test_cmd="python -m pytest"
+      command -v flake8 >/dev/null 2>&1 && lint_cmd="flake8"
+    fi
+  fi
+
+  # Priority 6: Go
+  if [ -z "$test_cmd" ] && [ -f "go.mod" ]; then
+    project_type="go"
+    test_cmd="go test ./..."
+    command -v golangci-lint >/dev/null 2>&1 && lint_cmd="golangci-lint run"
+    build_cmd="go build ./..."
+  fi
+
+  # Priority 7: Java (Maven > Gradle)
+  if [ -z "$test_cmd" ] && [ -f "pom.xml" ]; then
+    project_type="maven"
+    test_cmd="mvn test"
+    lint_cmd="mvn checkstyle:check"
+    build_cmd="mvn package -DskipTests"
+  elif [ -z "$test_cmd" ] && ([ -f "build.gradle" ] || [ -f "build.gradle.kts" ]); then
+    project_type="gradle"
+    test_cmd="./gradlew test"
+    lint_cmd="./gradlew check"
+    build_cmd="./gradlew build -x test"
+  fi
+
+  # Priority 8: Ruby
+  if [ -z "$test_cmd" ] && [ -f "Gemfile" ]; then
+    project_type="ruby"
+    test_cmd="bundle exec rspec"
+    lint_cmd="bundle exec rubocop"
+    build_cmd="" # Ruby doesn't typically need build
+  fi
+
+  # Output as shell-parseable format
+  echo "PROJECT_TYPE='$project_type'"
+  echo "TEST_CMD='$test_cmd'"
+  echo "LINT_CMD='$lint_cmd'"
+  echo "BUILD_CMD='$build_cmd'"
+}
+
+# =============================================================================
 # Argument parsing helpers
 # =============================================================================
 

@@ -1,6 +1,6 @@
 {
   "name": "dots-swe",
-  "version": "1.3.2",
+  "version": "2.0.0",
   "description": "Software engineering tools for Claude Code - work management, beads integration, and ship workflows for independent developers",
   "author": {
     "name": "Objectiveous"
