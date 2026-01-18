@@ -1,7 +1,6 @@
 ---
 allowed-tools: Bash(bash:*)
 description: Integrate code to main and clean up resources
-execution-mode: atomic-bash
 ---
 
 <claude-instructions>
