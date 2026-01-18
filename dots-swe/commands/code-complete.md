@@ -14,7 +14,7 @@ execution-mode: atomic-bash
 
 Marks code as complete by running quality gates, pushing to remote, and updating bead status.
 
-**Note:** This command does NOT create a PR. The `swe:done` label signals to another agent or human reviewer that work is ready for PR creation and merge.
+**Note:** This command does NOT create a PR. The `swe:code-complete` label signals to another agent or human reviewer that work is ready for PR creation and merge.
 
 **Usage:** `/dots-swe:code-complete [--skip-tests] [--skip-lint] [--skip-build]`
 
@@ -56,7 +56,7 @@ Marks code as complete by running quality gates, pushing to remote, and updating
   echo "  4. Run build"
   echo "  5. Push to remote"
   echo "  6. Add comment to bead"
-  echo "  7. Add swe:done label (keeps status: in_progress)"
+  echo "  7. Add swe:code-complete label (keeps status: in_progress)"
   echo ""
   echo "Note: PR creation is handled separately by a reviewer agent or human."
   exit 0
@@ -161,9 +161,9 @@ fi
 !if [ -n "$CURRENT_BEAD" ]; then
   echo "Adding completion marker to bead $CURRENT_BEAD..."
   bd comment "$CURRENT_BEAD" "Code complete - quality gates passed, ready for PR and merge" 2>/dev/null
-  bd label add "$CURRENT_BEAD" swe:done 2>/dev/null
+  bd label add "$CURRENT_BEAD" swe:code-complete 2>/dev/null
   bd sync 2>/dev/null
-  echo "Bead updated (status: in_progress, label: swe:done)"
+  echo "Bead updated (status: in_progress, label: swe:code-complete)"
 else
   echo "No bead associated with this worktree"
 fi

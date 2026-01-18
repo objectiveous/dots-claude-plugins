@@ -181,10 +181,10 @@ echo "🎁 Ready to Integrate"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Check for issues marked with swe:done label
-SWE_DONE=$(bd list --label swe:done 2>/dev/null | grep -v "^$")
+# Check for issues marked with swe:code-complete label
+SWE_DONE=$(bd list --label swe:code-complete 2>/dev/null | grep -v "^$")
 if [ -n "$SWE_DONE" ]; then
-  echo "Code complete (swe:done label):"
+  echo "Code complete (swe:code-complete label):"
   echo "$SWE_DONE"
   echo ""
   echo "  Run: /dots-swe:code-integrate-status for details"

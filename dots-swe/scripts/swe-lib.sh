@@ -770,7 +770,7 @@ delete_worktrees() {
 }
 
 # =============================================================================
-# swe:done Label Workflow Helpers
+# swe:code-complete Label Workflow Helpers
 # =============================================================================
 
 # Check if branch is merged to main (local or via PR)

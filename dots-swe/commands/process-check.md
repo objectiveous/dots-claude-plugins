@@ -47,7 +47,7 @@ Runs quality gates (test, lint, build) without creating a PR. Use this to verify
   echo "  --skip-build    Skip build step"
   echo "  --help, -h      Show this help"
   echo ""
-  echo "Use /dots-swe:ship to run the full protocol (tests + push + bead update)."
+  echo "Use /dots-swe:code-complete to run the full protocol (tests + push + mark complete)."
   exit 0
 fi
 
@@ -133,4 +133,4 @@ fi
 !echo ""
 !echo "Next steps:"
 !echo "  - Commit your changes"
-!echo "  - Run /dots-swe:ship to push and update bead"
+!echo "  - Run /dots-swe:code-complete to push and mark complete"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Show code integration status for swe:done labeled beads
+# Show code integration status for swe:code-complete labeled beads
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/swe-lib.sh"
@@ -8,7 +8,7 @@ source "$SCRIPT_DIR/swe-lib.sh"
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "Usage: /dots-swe:code-integrate-status"
   echo ""
-  echo "Show all swe:done labeled beads and their integration readiness."
+  echo "Show all swe:code-complete labeled beads and their integration readiness."
   echo ""
   echo "For each bead, shows:"
   echo "  • Merge status (MERGED/OPEN PR/NO PR)"
@@ -28,11 +28,11 @@ echo "║              Code Integration Status                         ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Get all beads with swe:done label
-BEADS=$(bd list --label swe:done --json 2>/dev/null)
+# Get all beads with swe:code-complete label
+BEADS=$(bd list --label swe:code-complete --json 2>/dev/null)
 
 if [ -z "$BEADS" ] || [ "$BEADS" = "[]" ]; then
-  echo "ℹ️  No beads with swe:done label found."
+  echo "ℹ️  No beads with swe:code-complete label found."
   echo ""
   echo "Run /dots-swe:code-complete to mark work as complete."
   exit 0
@@ -44,7 +44,7 @@ WAITING_COUNT=0
 NO_PR_COUNT=0
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🏁 Work Completed (swe:done)"
+echo "🏁 Work Completed (swe:code-complete)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 

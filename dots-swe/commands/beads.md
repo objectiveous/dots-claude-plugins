@@ -55,7 +55,7 @@ fi
 !echo "Update beads:"
 !echo "  bd update <id> --status=in_progress      - Mark as in progress"
 !echo "  bd update <id> --status=blocked          - Mark as blocked"
-!echo "  bd label add <id> swe:done               - Mark code complete"
+!echo "  bd label add <id> swe:code-complete               - Mark code complete"
 !echo "  bd comment <id> \"message\"                - Add comment"
 !echo "  bd close <id>                            - Close bead"
 !echo ""

@@ -120,7 +120,7 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
    ```
    /dots-swe:code-complete
    ```
-   This runs quality gates, pushes, and adds `swe:done` label to signal completion.
+   This runs quality gates, pushes, and adds `swe:code-complete` label to signal completion.
 
 3. **Session close protocol**
    ```bash
@@ -215,7 +215,7 @@ When done, summarize:
 - 150 lines added, 20 removed
 
 **Quality gates:** All passed
-**Status:** Pushed, swe:done label added
+**Status:** Pushed, swe:code-complete label added
 
 **Next steps (for reviewer):**
 - Create PR

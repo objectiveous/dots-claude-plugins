@@ -12,7 +12,7 @@ execution-mode: atomic-bash
 
 # Code Integration
 
-Integrate merged `swe:done` labeled beads - closes bead, kills session, deletes worktree and branches.
+Integrate merged `swe:code-complete` labeled beads - closes bead, kills session, deletes worktree and branches.
 
 **Usage:** `/dots-swe:code-integrate [options] [bead-id...]`
 
@@ -22,7 +22,7 @@ Integrate merged `swe:done` labeled beads - closes bead, kills session, deletes 
 - `--no-remote` - Skip remote branch deletion
 
 **Behavior:**
-- Without bead IDs: processes ALL swe:done beads that are merged
+- Without bead IDs: processes ALL swe:code-complete beads that are merged
 - With bead IDs: processes only specified beads
 
 **For each bead:**
@@ -32,7 +32,7 @@ Integrate merged `swe:done` labeled beads - closes bead, kills session, deletes 
 4. Delete local branch
 5. Delete remote branch (unless --no-remote)
 6. Close bead
-7. Remove swe:done label
+7. Remove swe:code-complete label
 
 **Examples:**
 ```bash

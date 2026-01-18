@@ -19,7 +19,7 @@ Software engineering tools for Claude Code - work management, beads integration,
 | `/dots-swe:dispatch <bead-id>` | Start work on a bead (creates workspace, opens Claude) |
 | `/dots-swe:continue [bead-id]` | Continue work (reattach to existing session) |
 | `/dots-swe:reconnect` | Reconnect to stranded worktrees (without active sessions) |
-| `/dots-swe:code-integrate-status` | Show swe:done beads ready for integration |
+| `/dots-swe:code-integrate-status` | Show swe:code-complete beads ready for integration |
 | `/dots-swe:code-integrate [bead-id...]` | Integrate code after merge - clean up resources |
 
 ### Quality & Shipping

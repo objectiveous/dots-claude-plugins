@@ -12,12 +12,12 @@ execution-mode: atomic-bash
 
 # Code Integration Status
 
-Shows all `swe:done` labeled beads and their integration readiness.
+Shows all `swe:code-complete` labeled beads and their integration readiness.
 
 **Usage:** `/dots-swe:code-integrate-status`
 
 **Shows:**
-- Beads with `swe:done` label
+- Beads with `swe:code-complete` label
 - Merge status for each (MERGED/OPEN PR/NO PR)
 - Resources ready for integration (worktree, session, branches)
 - Summary with suggested next actions

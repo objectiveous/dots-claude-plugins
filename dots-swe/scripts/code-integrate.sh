@@ -1,5 +1,5 @@
 #!/bin/bash
-# Batch integration of merged swe:done work
+# Batch integration of merged swe:code-complete work
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/swe-lib.sh"
@@ -24,7 +24,7 @@ done
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "Usage: /dots-swe:code-integrate [options] [bead-id...]"
   echo ""
-  echo "Batch integration of merged swe:done work."
+  echo "Batch integration of merged swe:code-complete work."
   echo ""
   echo "Options:"
   echo "  --dry-run, -n    Show what would happen without doing it"
@@ -32,7 +32,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  --no-remote      Skip remote branch deletion"
   echo ""
   echo "Behavior:"
-  echo "  Without bead IDs: processes ALL swe:done beads that are merged"
+  echo "  Without bead IDs: processes ALL swe:code-complete beads that are merged"
   echo "  With bead IDs: processes only specified beads"
   echo ""
   echo "For each merged bead:"
@@ -41,7 +41,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  3. Delete local branch"
   echo "  4. Delete remote branch (unless --no-remote)"
   echo "  5. Close bead"
-  echo "  6. Remove swe:done label"
+  echo "  6. Remove swe:code-complete label"
   echo ""
   echo "Examples:"
   echo "  /dots-swe:code-integrate                    # Integrate all merged work"
@@ -64,18 +64,18 @@ echo ""
 
 # Get beads to process
 if [ ${#BEAD_IDS[@]} -eq 0 ]; then
-  # No beads specified - get all swe:done beads
-  echo "📋 Finding all swe:done labeled beads..."
-  BEADS_JSON=$(bd list --label swe:done --json 2>/dev/null)
+  # No beads specified - get all swe:code-complete beads
+  echo "📋 Finding all swe:code-complete labeled beads..."
+  BEADS_JSON=$(bd list --label swe:code-complete --json 2>/dev/null)
 
   if [ -z "$BEADS_JSON" ] || [ "$BEADS_JSON" = "[]" ]; then
-    echo "ℹ️  No beads with swe:done label found."
+    echo "ℹ️  No beads with swe:code-complete label found."
     exit 0
   fi
 
   # Extract bead IDs
   mapfile -t BEAD_IDS < <(echo "$BEADS_JSON" | jq -r '.[].id')
-  echo "   Found ${#BEAD_IDS[@]} bead(s) with swe:done label"
+  echo "   Found ${#BEAD_IDS[@]} bead(s) with swe:code-complete label"
   echo ""
 else
   echo "📋 Processing ${#BEAD_IDS[@]} specified bead(s)..."
@@ -150,7 +150,7 @@ if [ "$DRY_RUN" = true ]; then
   [ "$NO_REMOTE" = false ] && echo "  4. Delete remote branch"
   [ "$NO_REMOTE" = true ] && echo "  4. Keep remote branch (--no-remote)"
   echo "  5. Close bead"
-  echo "  6. Remove swe:done label"
+  echo "  6. Remove swe:code-complete label"
   echo "  7. Sync beads"
   echo ""
   echo "Run without --dry-run to execute"
@@ -231,7 +231,7 @@ for BEAD_ID in "${TO_INTEGRATION[@]}"; do
   }
 
   # 6. Remove label
-  bd label remove "$BEAD_ID" swe:done 2>/dev/null
+  bd label remove "$BEAD_ID" swe:code-complete 2>/dev/null
 
   # 7. Unregister from global registry
   if [ -n "$WORKTREE_PATH" ]; then
