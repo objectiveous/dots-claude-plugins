@@ -173,7 +173,7 @@ fi
 !echo "Code complete!"
 !echo ""
 !echo "Branch: $BRANCH"
-!echo "Status: Pushed and ready for review"
+!echo "Status: Ready for integration into main repository"
 !echo ""
 !echo "Next steps (for reviewer):"
 !echo "  - Create PR: gh pr create --base main --fill"
