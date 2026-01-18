@@ -10,9 +10,9 @@ execution-mode: atomic-bash
 3. Wait for the skill execution output and report the result to the user
 </claude-instructions>
 
-# Reconnect to Stranded Worktrees
+# Reconnect to All Worktrees
 
-Opens new terminal sessions for worktrees that don't have active sessions.
+Opens terminal tabs for ALL worktrees, creating new sessions for stranded ones.
 
 **Usage:** `/dots-swe:reconnect [options]`
 
@@ -23,18 +23,20 @@ Opens new terminal sessions for worktrees that don't have active sessions.
 
 **What it does:**
 1. Scans all git worktrees (excluding main)
-2. Identifies worktrees without active sessions (stranded)
-3. Opens new terminal sessions for each stranded worktree
-4. Attaches to the first session
+2. For worktrees with existing sessions: opens tabs to reconnect
+3. For worktrees without sessions: creates new sessions (no auto-start)
+4. Opens a terminal tab/window for EACH worktree
+
+**Important:** New sessions (stranded worktrees) start Claude WITHOUT automatic prompts. Claude will wait for human input and won't auto-start working. This requires human intervention to provide direction.
 
 **Use when:**
-- Terminal sessions were closed or lost
-- Worktrees were created manually without sessions
+- You want to open tabs for all your work-in-progress branches
+- Terminal sessions were closed and you want to restore them all
 - After system restart or terminal crash
-- You didn't use the proper workflow and have orphaned worktrees
+- You manually created worktrees and need to connect to them
 
 **Terminal Support:**
-- **Ghostty**: Creates zmx sessions, opens first as tab/window
+- **Ghostty**: Opens zmx sessions in tabs/windows for ALL worktrees
 - **iTerm2**: Creates tmux windows, attaches via AppleScript
 
 ## Implementation

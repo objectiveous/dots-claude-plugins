@@ -191,13 +191,20 @@ open_ghostty_zmx_session() {
 start_zmx_session_background() {
   local worktree_path="$1"
   local session_name="$2"
+  local no_auto="${3:-false}"  # optional: prevent auto-start
   local abs_path claude_opts
 
   abs_path="$(cd "$worktree_path" && pwd)"
-  claude_opts=$(get_claude_options)
 
-  # zmx run starts session without attaching
-  (cd "$abs_path" && zmx run "$session_name" claude $claude_opts)
+  if [ "$no_auto" = "true" ]; then
+    # Start Claude without automatic prompts - waits for human input
+    # Use --dangerously-skip-permissions but NOT --model opus to avoid auto-start
+    (cd "$abs_path" && zmx run "$session_name" claude --dangerously-skip-permissions)
+  else
+    # Normal start with full options
+    claude_opts=$(get_claude_options)
+    (cd "$abs_path" && zmx run "$session_name" claude $claude_opts)
+  fi
 }
 
 # =============================================================================
