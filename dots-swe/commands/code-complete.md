@@ -75,11 +75,11 @@ fi
 !echo "Branch: $BRANCH"
 !echo ""
 
-# Check for uncommitted changes
-!CHANGES=$(git status --porcelain | wc -l | tr -d ' ')
+# Check for uncommitted changes (excluding swe metadata files)
+!CHANGES=$(git status --porcelain | grep -v '^\?\? \.swe-' | wc -l | tr -d ' ')
 !if [ "$CHANGES" -gt 0 ]; then
   echo "WARNING: You have uncommitted changes:"
-  git status --short
+  git status --short | grep -v '^\?\? \.swe-'
   echo ""
   echo "Commit your changes before marking code complete."
   exit 1
