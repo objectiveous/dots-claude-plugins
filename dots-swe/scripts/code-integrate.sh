@@ -237,7 +237,7 @@ echo ""
 
 for BEAD_ID in "${TO_INTEGRATION[@]}"; do
   MERGE_STATUS=$(is_branch_merged "$BEAD_ID")
-  RESOURCES=$(get_integration_resources "$BEAD_ID")
+  RESOURCES=$(get_cleanup_resources "$BEAD_ID")
 
   STATUS_LABEL="MERGED"
   [ "$MERGE_STATUS" = "local" ] && STATUS_LABEL="MERGED (local)"
