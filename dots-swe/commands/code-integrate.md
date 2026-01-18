@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(bash:*)
-description: Integrate code after merge - clean up resources
+description: Integrate code to main and clean up resources
 execution-mode: atomic-bash
 ---
 
@@ -12,7 +12,7 @@ execution-mode: atomic-bash
 
 # Code Integration
 
-Integrate merged `swe:code-complete` labeled beads - closes bead, kills session, deletes worktree and branches.
+Integrate `swe:code-complete` work into main and clean up resources. Automatically detects GitHub PR workflow vs local merge workflow, performs the integration, then cleans up worktrees, sessions, and branches.
 
 **Usage:** `/dots-swe:code-integrate [options] [bead-id...]`
 
@@ -22,11 +22,15 @@ Integrate merged `swe:code-complete` labeled beads - closes bead, kills session,
 - `--no-remote` - Skip remote branch deletion
 
 **Behavior:**
-- Without bead IDs: processes ALL swe:code-complete beads that are merged
+- Without bead IDs: processes ALL swe:code-complete beads
 - With bead IDs: processes only specified beads
 
+**Workflow Detection:**
+- **GitHub mode:** Creates/finds PR for unmerged work, waits for manual merge
+- **Local mode:** Merges branch directly to main
+
 **For each bead:**
-1. Verify merged to main (unless --force)
+1. Merge to main if not already merged (auto-detects GitHub/local)
 2. Kill zmx/tmux session
 3. Delete worktree
 4. Delete local branch
@@ -36,7 +40,7 @@ Integrate merged `swe:code-complete` labeled beads - closes bead, kills session,
 
 **Examples:**
 ```bash
-/dots-swe:code-integrate                    # Integrate all merged work
+/dots-swe:code-integrate                    # Integrate all code-complete work
 /dots-swe:code-integrate dots-abc           # Integrate specific bead
 /dots-swe:code-integrate --dry-run          # Preview what would happen
 /dots-swe:code-integrate --no-remote        # Keep remote branches

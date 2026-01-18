@@ -24,7 +24,7 @@ done
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "Usage: /dots-swe:code-integrate [options] [bead-id...]"
   echo ""
-  echo "Batch integration of merged swe:code-complete work."
+  echo "Integrate swe:code-complete work into main and clean up resources."
   echo ""
   echo "Options:"
   echo "  --dry-run, -n    Show what would happen without doing it"
@@ -32,19 +32,24 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  --no-remote      Skip remote branch deletion"
   echo ""
   echo "Behavior:"
-  echo "  Without bead IDs: processes ALL swe:code-complete beads that are merged"
+  echo "  Without bead IDs: processes ALL swe:code-complete beads"
   echo "  With bead IDs: processes only specified beads"
   echo ""
-  echo "For each merged bead:"
-  echo "  1. Kill zmx/tmux session"
-  echo "  2. Delete worktree"
-  echo "  3. Delete local branch"
-  echo "  4. Delete remote branch (unless --no-remote)"
-  echo "  5. Close bead"
-  echo "  6. Remove swe:code-complete label"
+  echo "Workflow Detection:"
+  echo "  • GitHub mode: Creates/finds PR for unmerged work, waits for manual merge"
+  echo "  • Local mode: Merges branch directly to main"
+  echo ""
+  echo "For each bead:"
+  echo "  1. Merge to main if not already merged (auto-detects GitHub/local)"
+  echo "  2. Kill zmx/tmux session"
+  echo "  3. Delete worktree"
+  echo "  4. Delete local branch"
+  echo "  5. Delete remote branch (unless --no-remote)"
+  echo "  6. Close bead"
+  echo "  7. Remove swe:code-complete label"
   echo ""
   echo "Examples:"
-  echo "  /dots-swe:code-integrate                    # Integrate all merged work"
+  echo "  /dots-swe:code-integrate                    # Integrate all code-complete work"
   echo "  /dots-swe:code-integrate dots-abc           # Integrate specific bead"
   echo "  /dots-swe:code-integrate --dry-run          # Preview what would happen"
   echo "  /dots-swe:code-integrate --no-remote        # Keep remote branches"
@@ -56,10 +61,13 @@ fi
 
 WORKTREES_DIR=$(get_worktrees_dir)
 TERMINAL=$(get_swe_terminal)
+WORKFLOW_MODE=$(detect_workflow_mode)
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    Batch Integration                             ║"
+echo "║                    Code Integration                          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
+echo ""
+echo "Workflow mode: $WORKFLOW_MODE"
 echo ""
 
 # Get beads to process
@@ -82,30 +90,84 @@ else
   echo ""
 fi
 
-# Filter for merged beads (unless --force)
+# Process beads - merge if needed, then clean up
 TO_INTEGRATION=()
 SKIPPED=()
+MERGE_FAILED=()
 
 for BEAD_ID in "${BEAD_IDS[@]}"; do
   # Check merge status
   MERGE_STATUS=$(is_branch_merged "$BEAD_ID")
 
   if [ "$FORCE" = true ] || [ "$MERGE_STATUS" != "no" ]; then
+    # Already merged or forced
     TO_INTEGRATION+=("$BEAD_ID")
   else
-    SKIPPED+=("$BEAD_ID")
+    # Not merged yet - try to merge based on workflow mode
+    echo "🔄 $BEAD_ID is not merged yet. Attempting integration..."
+
+    if [ "$WORKFLOW_MODE" = "github" ]; then
+      # GitHub PR workflow
+      PR_NUMBER=$(create_or_find_pr "$BEAD_ID" "main" 2>&1)
+      if [ -n "$PR_NUMBER" ] && [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+        PR_URL=$(gh pr view "$PR_NUMBER" --json url --jq '.url' 2>/dev/null)
+        PR_STATE=$(gh pr view "$PR_NUMBER" --json state --jq '.state' 2>/dev/null)
+
+        echo "   PR #$PR_NUMBER: $PR_URL"
+        echo "   State: $PR_STATE"
+
+        if [ "$PR_STATE" = "OPEN" ]; then
+          echo "   ⏳ PR is open but not merged. Skipping for now."
+          echo "      Merge the PR manually or wait for CI, then run code-integrate again."
+          SKIPPED+=("$BEAD_ID")
+          echo ""
+          continue
+        elif [ "$PR_STATE" = "MERGED" ]; then
+          echo "   ✅ PR already merged"
+          TO_INTEGRATION+=("$BEAD_ID")
+        fi
+      else
+        echo "   ❌ $PR_NUMBER"
+        MERGE_FAILED+=("$BEAD_ID")
+        echo ""
+        continue
+      fi
+    else
+      # Local merge workflow
+      echo "   Merging locally to main..."
+      if merge_branch_to_main "$BEAD_ID"; then
+        echo "   ✅ Merged to main"
+        TO_INTEGRATION+=("$BEAD_ID")
+      else
+        echo "   ❌ Merge failed - may have conflicts"
+        MERGE_FAILED+=("$BEAD_ID")
+        echo ""
+        continue
+      fi
+    fi
+
+    echo ""
   fi
 done
 
 if [ ${#TO_INTEGRATION[@]} -eq 0 ]; then
-  echo "ℹ️  No merged beads to clean up."
+  echo "ℹ️  No beads ready for integration."
   echo ""
   if [ ${#SKIPPED[@]} -gt 0 ]; then
-    echo "Skipped (not merged):"
+    echo "Skipped (PR not merged yet):"
     for BEAD_ID in "${SKIPPED[@]}"; do
-      echo "  - $BEAD_ID"
+      echo "  - $BEAD_ID (merge PR manually, then run code-integrate again)"
     done
     echo ""
+  fi
+  if [ ${#MERGE_FAILED[@]} -gt 0 ]; then
+    echo "Failed to merge:"
+    for BEAD_ID in "${MERGE_FAILED[@]}"; do
+      echo "  - $BEAD_ID (check for conflicts or PR issues)"
+    done
+    echo ""
+  fi
+  if [ ${#SKIPPED[@]} -eq 0 ] && [ ${#MERGE_FAILED[@]} -eq 0 ]; then
     echo "Use --force to clean up anyway (not recommended)"
   fi
   exit 0
@@ -132,8 +194,16 @@ done
 
 if [ ${#SKIPPED[@]} -gt 0 ]; then
   echo ""
-  echo "Skipped (not merged):"
+  echo "Skipped (PR not merged yet):"
   for BEAD_ID in "${SKIPPED[@]}"; do
+    echo "  - $BEAD_ID"
+  done
+fi
+
+if [ ${#MERGE_FAILED[@]} -gt 0 ]; then
+  echo ""
+  echo "Failed to merge:"
+  for BEAD_ID in "${MERGE_FAILED[@]}"; do
     echo "  - $BEAD_ID"
   done
 fi
@@ -257,12 +327,15 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📊 Integration Summary"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "  Cleaned: $CLEANED_COUNT"
+echo "  Integrated: $CLEANED_COUNT"
 if [ $ERROR_COUNT -gt 0 ]; then
   echo "  With warnings: $ERROR_COUNT"
 fi
 if [ ${#SKIPPED[@]} -gt 0 ]; then
-  echo "  Skipped: ${#SKIPPED[@]}"
+  echo "  Skipped (PR pending): ${#SKIPPED[@]}"
+fi
+if [ ${#MERGE_FAILED[@]} -gt 0 ]; then
+  echo "  Failed to merge: ${#MERGE_FAILED[@]}"
 fi
 echo ""
 

@@ -795,6 +795,100 @@ is_branch_merged() {
   return 1
 }
 
+# Detect workflow mode (GitHub PR or local merge)
+# Returns: "github" if using GitHub workflow, "local" otherwise
+detect_workflow_mode() {
+  # Check if gh CLI is available and authenticated
+  if ! command -v gh &> /dev/null; then
+    echo "local"
+    return
+  fi
+
+  # Check if authenticated
+  if ! gh auth status &> /dev/null; then
+    echo "local"
+    return
+  fi
+
+  # Check if origin is GitHub
+  if git remote -v 2>/dev/null | grep -q "github.com"; then
+    echo "github"
+    return
+  fi
+
+  echo "local"
+}
+
+# Create or find PR for branch
+# Returns: PR number if successful, empty otherwise
+# Prints error messages to stderr
+create_or_find_pr() {
+  local branch="$1"
+  local base="${2:-main}"
+
+  # Check if PR already exists
+  local pr_number=$(gh pr list --head "$branch" --state all --json number --jq '.[0].number' 2>/dev/null)
+
+  if [ -n "$pr_number" ]; then
+    echo "$pr_number"
+    return 0
+  fi
+
+  # Check if branch exists on remote
+  if ! git ls-remote --heads origin "$branch" 2>/dev/null | grep -q .; then
+    echo "Branch $branch not found on remote. Push it first with: git push -u origin $branch" >&2
+    return 1
+  fi
+
+  # Create new PR
+  local pr_output
+  pr_output=$(gh pr create --base "$base" --head "$branch" --fill --json number 2>&1)
+  pr_number=$(echo "$pr_output" | jq -r '.number' 2>/dev/null)
+
+  if [ -n "$pr_number" ] && [ "$pr_number" != "null" ]; then
+    echo "$pr_number"
+    return 0
+  fi
+
+  # PR creation failed - show error
+  echo "Failed to create PR: $pr_output" >&2
+  return 1
+}
+
+# Merge branch to main locally
+# Returns: 0 if successful, 1 otherwise
+merge_branch_to_main() {
+  local branch="$1"
+  local current_branch=$(git branch --show-current)
+
+  # Switch to main
+  git checkout main 2>/dev/null || return 1
+
+  # Pull latest
+  git pull origin main 2>/dev/null || {
+    git checkout "$current_branch" 2>/dev/null
+    return 1
+  }
+
+  # Merge branch
+  if git merge "$branch" --no-ff -m "Merge branch '$branch'" 2>/dev/null; then
+    # Push to origin
+    git push origin main 2>/dev/null || {
+      git checkout "$current_branch" 2>/dev/null
+      return 1
+    }
+
+    # Return to original branch
+    git checkout "$current_branch" 2>/dev/null
+    return 0
+  else
+    # Merge failed, abort and return
+    git merge --abort 2>/dev/null
+    git checkout "$current_branch" 2>/dev/null
+    return 1
+  fi
+}
+
 # Get cleanup resources for a bead
 # Returns: comma-separated list of resources (worktree, zmx/tmux, branch, remote)
 get_cleanup_resources() {
