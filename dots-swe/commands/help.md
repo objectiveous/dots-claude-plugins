@@ -15,7 +15,7 @@ Software engineering tools for Claude Code - work management, beads integration,
 
 | Command | Description |
 |---------|-------------|
-| `/dots-swe:start <bead-id>` | Start work on a bead (creates workspace, opens Claude) |
+| `/dots-swe:dispatch <bead-id>` | Start work on a bead (creates workspace, opens Claude) |
 | `/dots-swe:continue [bead-id]` | Continue work (reattach to existing session) |
 | `/dots-swe:finish [bead-id]` | Finish work (verify PR merged, cleanup) |
 
@@ -23,8 +23,8 @@ Software engineering tools for Claude Code - work management, beads integration,
 
 | Command | Description |
 |---------|-------------|
-| `/dots-swe:check` | Run quality gates: test, lint, build |
-| `/dots-swe:ship` | Full protocol: test, lint, build, PR, CI watch |
+| `/dots-swe:process-check` | Run quality gates: test, lint, build |
+| `/dots-swe:done` | Full protocol: test, lint, build, push, update bead |
 | `/dots-swe:doctor` | Health check for repository |
 
 ### Beads
@@ -52,11 +52,11 @@ Software engineering tools for Claude Code - work management, beads integration,
 ┌─────────────────────────────────────────────────────────────┐
 │  bd ready          # Find available work                    │
 │       ↓                                                     │
-│  /dots-swe:start dots-abc    # Start work                   │
+│  /dots-swe:dispatch dots-abc    # Start work                │
 │       ↓                                                     │
 │  ... work in new Claude session ...                         │
 │       ↓                                                     │
-│  /dots-swe:ship              # Create PR, watch CI          │
+│  /dots-swe:done              # Push and update bead         │
 │       ↓                                                     │
 │  ... PR reviewed and merged ...                             │
 │       ↓                                                     │
@@ -94,7 +94,7 @@ In each workspace:
 ## More Help
 
 ```bash
-/dots-swe:start --help
+/dots-swe:dispatch --help
 /dots-swe:finish --help
-/dots-swe:ship --help
+/dots-swe:done --help
 ```

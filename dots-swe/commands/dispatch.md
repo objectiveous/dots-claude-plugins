@@ -14,11 +14,11 @@ CRITICAL: This skill spawns a NEW session in a workspace. DO NOT work in the cur
 5. NEVER continue working in the current directory after this skill runs
 </claude-instructions>
 
-# Start Work
+# Dispatch Work
 
 Start work on a bead by creating a workspace and opening a Claude session.
 
-**Usage:** `/dots-swe:start [options] [bead-id]`
+**Usage:** `/dots-swe:dispatch [options] [bead-id]`
 
 **Arguments:**
 - `bead-id` - Bead to work on (optional if already in a worktree)
@@ -30,12 +30,12 @@ Start work on a bead by creating a workspace and opening a Claude session.
 
 **Examples:**
 ```bash
-/dots-swe:start dots-abc           # Open tab for specific bead
-/dots-swe:start --window dots-abc  # Open window instead
-/dots-swe:start                    # Open tab for current worktree
-/dots-swe:start --dry-run dots-abc # Preview what would happen
+/dots-swe:dispatch dots-abc           # Open tab for specific bead
+/dots-swe:dispatch --window dots-abc  # Open window instead
+/dots-swe:dispatch                    # Open tab for current worktree
+/dots-swe:dispatch --dry-run dots-abc # Preview what would happen
 ```
 
 ## Implementation
 
-!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/start.sh 2>/dev/null | head -1)" "$@"
+!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/dispatch.sh 2>/dev/null | head -1)" "$@"

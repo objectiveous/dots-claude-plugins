@@ -76,7 +76,7 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
 2. **Implement incrementally**
    - One logical change at a time
    - Commit after each meaningful step
-   - Run `/dots-swe:check` after major changes
+   - Run `/dots-swe:process-check` after major changes
 
 3. **Follow existing patterns**
    - Match the codebase style
@@ -87,7 +87,7 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
 
 1. **Run quality gates**
    ```
-   /dots-swe:check
+   /dots-swe:process-check
    ```
    This runs tests, lint, and build.
 
@@ -118,7 +118,7 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
 
 2. **Run ship protocol**
    ```
-   /dots-swe:ship
+   /dots-swe:done
    ```
    This pushes and updates bead to `ready_to_merge`.
 
@@ -256,8 +256,8 @@ Co-Authored-By: Claude <opus|sonnet> <noreply@anthropic.com>
 
 ```bash
 # Quality gates
-/dots-swe:check              # Test, lint, build
-/dots-swe:ship               # Check + push + update bead
+/dots-swe:process-check              # Test, lint, build
+/dots-swe:done               # Check + push + update bead
 
 # Bead management
 bd show <id>                 # View bead details
@@ -278,5 +278,5 @@ git log --oneline -5         # Recent history
 2. **Track acceptance criteria** - Show progress as you work
 3. **Ask don't guess** - Clarify ambiguous requirements
 4. **Search before coding** - Find existing patterns
-5. **Test and verify** - Run /dots-swe:check frequently
+5. **Test and verify** - Run /dots-swe:process-check frequently
 6. **Communicate clearly** - Show what's done, what's left, what's blocked

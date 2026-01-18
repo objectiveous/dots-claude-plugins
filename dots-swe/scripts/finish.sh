@@ -46,7 +46,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  /dots-swe:finish --dry-run    # Preview what would happen"
   echo ""
   echo "See also:"
-  echo "  /dots-swe:start <bead-id>     # Start new work"
+  echo "  /dots-swe:dispatch <bead-id>     # Start new work"
   echo "  /dots-swe:continue <bead-id>  # Continue existing work"
   exit 0
 fi
@@ -103,7 +103,7 @@ else
       echo ""
       echo "Options:"
       echo "  1. Merge to main locally: git checkout main && git merge $BRANCH"
-      echo "  2. Create a PR: /dots-swe:ship"
+      echo "  2. Create a PR: /dots-swe:done"
       echo "  3. Force cleanup: /dots-swe:finish --force"
       exit 1
     fi

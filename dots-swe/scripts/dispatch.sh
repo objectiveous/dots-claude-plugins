@@ -29,7 +29,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   TERMINAL=$(get_swe_terminal)
   CLAUDE_OPTS=$(get_claude_options)
 
-  echo "Usage: /dots-swe:start [options] [bead-id]"
+  echo "Usage: /dots-swe:dispatch [options] [bead-id]"
   echo ""
   echo "Start work on a bead by creating a worktree and Claude session."
   echo ""
@@ -56,14 +56,14 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  Reattach: zmx attach <bead-id>"
   else
     echo "  Session:  tmux (opens new iTerm window)"
-    echo "  Reattach: /dots-swe:starttree-attach <session>"
+    echo "  Reattach: /dots-swe:dispatchtree-attach <session>"
   fi
   echo ""
   echo "Examples:"
-  echo "  /dots-swe:start dots-abc             # Start work on specific bead (tab)"
-  echo "  /dots-swe:start --window dots-abc    # Open in new window"
-  echo "  /dots-swe:start                      # Open tab for current worktree"
-  echo "  /dots-swe:start --dry-run dots-abc   # Preview what would happen"
+  echo "  /dots-swe:dispatch dots-abc             # Start work on specific bead (tab)"
+  echo "  /dots-swe:dispatch --window dots-abc    # Open in new window"
+  echo "  /dots-swe:dispatch                      # Open tab for current worktree"
+  echo "  /dots-swe:dispatch --dry-run dots-abc   # Preview what would happen"
   echo ""
   echo "See also:"
   echo "  bd ready          # Find available work"
@@ -77,7 +77,7 @@ if [ -z "$BEAD_ID" ]; then
   if [ -z "$BEAD_ID" ]; then
     echo "ERROR: No bead ID provided and not in a worktree"
     echo ""
-    echo "Usage: /dots-swe:start [--dry-run] <bead-id>"
+    echo "Usage: /dots-swe:dispatch [--dry-run] <bead-id>"
     echo ""
     echo "Available work:"
     bd ready 2>/dev/null || echo "  (bd command not available)"
@@ -159,7 +159,7 @@ if [ "$DRY_RUN" = true ]; then
   else
     echo "🖥️  Will open iTerm window with Claude"
     echo "   Session: tmux ($BEAD_ID)"
-    echo "   Reattach: /dots-swe:starttree-attach"
+    echo "   Reattach: /dots-swe:dispatchtree-attach"
   fi
 
   echo ""

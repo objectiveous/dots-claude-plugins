@@ -28,7 +28,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  /dots-swe:continue dots-abc     # Continue work on dots-abc"
   echo ""
   echo "See also:"
-  echo "  /dots-swe:start <bead-id>   # Start new work"
+  echo "  /dots-swe:dispatch <bead-id>   # Start new work"
   echo "  /dots-swe:finish <bead-id>  # Finish and cleanup"
   exit 0
 fi
@@ -152,7 +152,7 @@ if [ -z "$BEAD_ID" ]; then
     if [ "$count" -eq 0 ]; then
       echo "  (no active sessions)"
       echo ""
-      echo "Start new work with: /dots-swe:start <bead-id>"
+      echo "Start new work with: /dots-swe:dispatch <bead-id>"
     else
       # Parse and display sessions
       echo "$sessions_json" | grep -o '{[^}]*}' | while read -r obj; do
@@ -199,7 +199,7 @@ if [ "$TERMINAL" = "ghostty" ]; then
     else
       echo "❌ No session or worktree found for: $BEAD_ID"
       echo ""
-      echo "Start new work with: /dots-swe:start $BEAD_ID"
+      echo "Start new work with: /dots-swe:dispatch $BEAD_ID"
       exit 1
     fi
   fi
@@ -218,7 +218,7 @@ else
     else
       echo "❌ No session or worktree found for: $BEAD_ID"
       echo ""
-      echo "Start new work with: /dots-swe:start $BEAD_ID"
+      echo "Start new work with: /dots-swe:dispatch $BEAD_ID"
       exit 1
     fi
   fi
