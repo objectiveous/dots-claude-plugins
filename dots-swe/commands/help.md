@@ -33,6 +33,13 @@ Software engineering tools for Claude Code - work management, beads integration,
 |---------|-------------|
 | `/dots-swe:beads` | Show available work and beads reference |
 
+### Git Hooks
+
+| Command | Description |
+|---------|-------------|
+| `/dots-swe:install-commit-hook` | Install Conventional Commits validator |
+| `/dots-swe:uninstall-commit-hook` | Remove Conventional Commits validator |
+
 ### Help
 
 | Command | Description |

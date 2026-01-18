@@ -236,6 +236,37 @@ bd update <bead-id> --status=ready_to_merge
 bd sync
 ```
 
+## After Completing Work
+
+When you finish implementing changes and create a commit:
+
+1. **Show the commit message** - Display what you committed:
+   ```
+   Created commit: feat(api): add user authentication
+   Commit hash: a1b2c3d
+   ```
+
+2. **Show next steps** - Tell the user what should happen next:
+   - If not yet pushed: "Next: Push to remote with `git push`"
+   - If pushed but no PR: "Next: Create PR with `/dots-swe:ship` or `gh pr create`"
+   - If PR created: "Next: Monitor CI checks and wait for review"
+   - If using beads: "Next: Update bead status with `bd update <id> --status=ready_to_merge`"
+
+3. **Run git status** - Show current state so user knows what's uncommitted
+
+**Example:**
+```bash
+✅ Changes committed successfully!
+
+Commit: feat(auth): add login endpoint
+Hash: 7f3e8a9
+
+Next steps:
+1. Push to remote: git push
+2. Create PR: /dots-swe:ship
+3. Update bead: bd update beads-123 --status=ready_to_merge
+```
+
 ## Remember
 
 - You're here to produce working, tested, maintainable code
@@ -244,3 +275,4 @@ bd sync
 - Use /dots-swe:check to verify locally
 - Use /dots-swe:ship for the full workflow
 - Keep beads updated if using them
+- **Always show commit message and next steps after committing**
