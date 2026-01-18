@@ -32,10 +32,10 @@ get_current_bead() {
 
 # Claude options for new sessions
 # Usage: get_claude_options [model]
-# model: opus (default), sonnet, haiku
+# model: sonnet (default), opus, haiku
 get_claude_options() {
-  local model="${1:-opus}"
-  echo "--dangerously-skip-permissions --model $model"
+  local model="${1:-sonnet}"
+  echo "--dangerously-skip-permissions --agent swe --model $model"
 }
 
 # Get tmux session name from epic/feature ID
@@ -75,11 +75,11 @@ add_tmux_window() {
 start_claude_in_window() {
   local session="$1"
   local window_name="$2"
-  local model="${3:-opus}"
+  local model="${3:-sonnet}"
   local claude_opts
   claude_opts=$(get_claude_options "$model")
 
-  tmux send-keys -t "$session:$window_name" "claude $claude_opts" Enter
+  tmux send-keys -t "$session:$window_name" "claude 'Go!' $claude_opts" Enter
 }
 
 # Attach iTerm2 to tmux session using control mode
@@ -196,7 +196,7 @@ start_zmx_session_background() {
   local worktree_path="$1"
   local session_name="$2"
   local no_auto="${3:-false}"  # optional: prevent auto-start
-  local model="${4:-opus}"     # optional: model (opus, sonnet, haiku)
+  local model="${4:-sonnet}"   # optional: model (sonnet, opus, haiku)
   local abs_path claude_opts
 
   abs_path="$(cd "$worktree_path" && pwd)"
@@ -208,7 +208,7 @@ start_zmx_session_background() {
   else
     # Normal start with full options
     claude_opts=$(get_claude_options "$model")
-    (cd "$abs_path" && zmx run "$session_name" claude $claude_opts)
+    (cd "$abs_path" && zmx run "$session_name" claude "Go!" $claude_opts)
   fi
 }
 

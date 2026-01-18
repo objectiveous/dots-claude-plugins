@@ -48,7 +48,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  --dry-run, -n    Show what would happen without doing it"
   echo "  --tab            Open Claude in a new Ghostty tab (default)"
   echo "  --window         Open Claude in a new Ghostty window"
-  echo "  --model <name>   Claude model to use (opus, sonnet, haiku; default: opus)"
+  echo "  --model <name>   Claude model to use (sonnet, opus, haiku; default: sonnet)"
   echo ""
   echo "What this does:"
   echo "  • Verifies the bead exists"
@@ -187,7 +187,7 @@ if [ -d "$WORKTREE_PATH" ]; then
   ABS_PATH="$(cd "$WORKTREE_PATH" && pwd)"
   register_worktree "$ABS_PATH" "$BEAD_ID" "$BEAD_ID"
   # open_worktree_session may exec (zmx) or return (tmux)
-  MODEL="${MODEL:-opus}"
+  MODEL="${MODEL:-sonnet}"
   open_worktree_session "$WORKTREE_PATH" "$BEAD_ID" "$MODEL"
   echo "✅ Opened existing worktree"
   exit 0
@@ -286,7 +286,7 @@ echo "Check .swe-context for task details and quick reference."
 echo ""
 
 # Opens new terminal window/tab with Claude session
-MODEL="${MODEL:-opus}"
+MODEL="${MODEL:-sonnet}"
 TERMINAL=$(get_swe_terminal)
 
 # For Ghostty, start zmx session in background first
