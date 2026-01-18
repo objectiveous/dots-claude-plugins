@@ -27,13 +27,15 @@ Start work on a bead by creating a workspace and opening a Claude session.
 - `--dry-run, -n` - Show what would happen without doing it
 - `--tab` - Open in a new Ghostty tab (default)
 - `--window` - Open in a new Ghostty window
+- `--model <name>` - Claude model to use (opus, sonnet, haiku; default: opus)
 
 **Examples:**
 ```bash
-/dots-swe:dispatch dots-abc           # Open tab for specific bead
-/dots-swe:dispatch --window dots-abc  # Open window instead
-/dots-swe:dispatch                    # Open tab for current worktree
-/dots-swe:dispatch --dry-run dots-abc # Preview what would happen
+/dots-swe:dispatch dots-abc                    # Open tab for specific bead
+/dots-swe:dispatch --window dots-abc           # Open window instead
+/dots-swe:dispatch --model sonnet dots-abc     # Use sonnet model
+/dots-swe:dispatch                             # Open tab for current worktree
+/dots-swe:dispatch --dry-run dots-abc          # Preview what would happen
 ```
 
 ## Implementation

@@ -1,5 +1,5 @@
 ---
-description: "Run the full Ship It protocol: test, lint, build, push, update bead"
+description: "Mark code complete: test, lint, build, push, update bead"
 allowed-tools: ["Bash"]
 execution-mode: atomic-bash
 ---
@@ -10,13 +10,13 @@ execution-mode: atomic-bash
 3. Wait for the skill execution output and report the result to the user
 </claude-instructions>
 
-# Ship It Protocol
+# Code Complete
 
-Runs the complete shipping workflow: tests, linting, build, push to remote, and update bead status.
+Marks code as complete by running quality gates, pushing to remote, and updating bead status.
 
-**Note:** This command does NOT create a PR. The bead status `ready_to_merge` signals to another agent or human reviewer that work is ready for PR creation and merge.
+**Note:** This command does NOT create a PR. The bead status `ready_to_merge` and `swe:done` label signal to another agent or human reviewer that work is ready for PR creation and merge.
 
-**Usage:** `/dots-swe:ship [--skip-tests] [--skip-lint] [--skip-build]`
+**Usage:** `/dots-swe:code-complete [--skip-tests] [--skip-lint] [--skip-build]`
 
 **Options:**
 - `--skip-tests` - Skip running tests
@@ -39,9 +39,9 @@ Runs the complete shipping workflow: tests, linting, build, push to remote, and 
 
 # Help flag
 !if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  echo "Usage: /dots-swe:ship [OPTIONS]"
+  echo "Usage: /dots-swe:code-complete [OPTIONS]"
   echo ""
-  echo "Run the complete Ship It protocol: tests, linting, build, push, update bead."
+  echo "Mark code as complete: tests, linting, build, push, update bead."
   echo ""
   echo "Options:"
   echo "  --skip-tests    Skip running tests"
@@ -56,6 +56,7 @@ Runs the complete shipping workflow: tests, linting, build, push to remote, and 
   echo "  4. Run build"
   echo "  5. Push to remote"
   echo "  6. Update bead status to ready_to_merge"
+  echo "  7. Add swe:done label"
   echo ""
   echo "Note: PR creation is handled separately by a reviewer agent or human."
   exit 0
@@ -66,7 +67,7 @@ fi
 !SKIP_BUILD=$(has_flag "--skip-build" "$@" && echo true || echo false)
 
 !echo "=================================================================="
-!echo "                      Ship It Protocol                            "
+!echo "                      Code Complete                               "
 !echo "=================================================================="
 !echo ""
 
@@ -80,7 +81,7 @@ fi
   echo "WARNING: You have uncommitted changes:"
   git status --short
   echo ""
-  echo "Commit your changes before shipping."
+  echo "Commit your changes before marking code complete."
   exit 1
 fi
 
@@ -160,16 +161,17 @@ fi
 !if [ -n "$CURRENT_BEAD" ]; then
   echo "Updating bead $CURRENT_BEAD to ready_to_merge..."
   bd update "$CURRENT_BEAD" --status=ready_to_merge 2>/dev/null
-  bd comment "$CURRENT_BEAD" "Quality gates passed - ready for PR and merge" 2>/dev/null
+  bd comment "$CURRENT_BEAD" "Code complete - quality gates passed, ready for PR and merge" 2>/dev/null
   bd sync 2>/dev/null
-  echo "Bead updated"
+  bd label add "$CURRENT_BEAD" swe:done 2>/dev/null
+  echo "Bead updated (status: ready_to_merge, label: swe:done)"
 else
   echo "No bead associated with this worktree"
 fi
 !echo ""
 
 !echo "------------------------------------------------------------------"
-!echo "Ship It complete!"
+!echo "Code complete!"
 !echo ""
 !echo "Branch: $BRANCH"
 !echo "Status: Pushed and ready for review"

@@ -263,7 +263,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "Start work:     /dots-swe:dispatch <bead-id>"
 echo "Continue work:  /dots-swe:continue <bead-id>"
-echo "Ship work:      /dots-swe:done"
+echo "Code complete:  /dots-swe:code-complete"
 echo "Finish work:    /dots-swe:finish <bead-id>"
 echo "Health check:   /dots-swe:doctor"
 echo ""

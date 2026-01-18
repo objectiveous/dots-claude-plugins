@@ -8,11 +8,19 @@ source "$SCRIPT_DIR/swe-lib.sh"
 # Parse flags
 DRY_RUN=false
 BEAD_ID=""
-for arg in "$@"; do
+MODEL=""
+i=0
+while [ $i -lt $# ]; do
+  i=$((i + 1))
+  eval "arg=\${$i}"
   case "$arg" in
     --dry-run|-n) DRY_RUN=true ;;
     --tab) export SWE_GHOSTTY_MODE=tab ;;
     --window) export SWE_GHOSTTY_MODE=window ;;
+    --model)
+      i=$((i + 1))
+      eval "MODEL=\${$i}"
+      ;;
     --help|-h) ;; # handled below
     *) BEAD_ID="$arg" ;;
   esac
@@ -40,6 +48,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  --dry-run, -n    Show what would happen without doing it"
   echo "  --tab            Open Claude in a new Ghostty tab (default)"
   echo "  --window         Open Claude in a new Ghostty window"
+  echo "  --model <name>   Claude model to use (opus, sonnet, haiku; default: opus)"
   echo ""
   echo "What this does:"
   echo "  • Verifies the bead exists"
@@ -60,10 +69,11 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   fi
   echo ""
   echo "Examples:"
-  echo "  /dots-swe:dispatch dots-abc             # Start work on specific bead (tab)"
-  echo "  /dots-swe:dispatch --window dots-abc    # Open in new window"
-  echo "  /dots-swe:dispatch                      # Open tab for current worktree"
-  echo "  /dots-swe:dispatch --dry-run dots-abc   # Preview what would happen"
+  echo "  /dots-swe:dispatch dots-abc                    # Start work on specific bead (tab)"
+  echo "  /dots-swe:dispatch --window dots-abc           # Open in new window"
+  echo "  /dots-swe:dispatch --model sonnet dots-abc     # Use sonnet model"
+  echo "  /dots-swe:dispatch                             # Open tab for current worktree"
+  echo "  /dots-swe:dispatch --dry-run dots-abc          # Preview what would happen"
   echo ""
   echo "See also:"
   echo "  bd ready          # Find available work"
@@ -177,7 +187,8 @@ if [ -d "$WORKTREE_PATH" ]; then
   ABS_PATH="$(cd "$WORKTREE_PATH" && pwd)"
   register_worktree "$ABS_PATH" "$BEAD_ID" "$BEAD_ID"
   # open_worktree_session may exec (zmx) or return (tmux)
-  open_worktree_session "$WORKTREE_PATH" "$BEAD_ID"
+  MODEL="${MODEL:-opus}"
+  open_worktree_session "$WORKTREE_PATH" "$BEAD_ID" "$MODEL"
   echo "✅ Opened existing worktree"
   exit 0
 fi
@@ -229,8 +240,8 @@ $BEAD_INFO
 
 ## Quick Reference
 
-- Run \`/dots-swe:check\` before committing to verify tests, lint, and build
-- Run \`/dots-swe:ship\` when ready to create PR and watch CI
+- Run \`/dots-swe:process-check\` before committing to verify tests, lint, and build
+- Run \`/dots-swe:code-complete\` when code is ready for review and merge
 - Update bead status: \`bd update $BEAD_ID --status=<status>\`
   - Statuses: \`in_progress\`, \`blocked\`, \`ready_to_merge\`
 - Add notes: \`bd comment $BEAD_ID "Your comment here"\`
@@ -275,6 +286,16 @@ echo "Check .swe-context for task details and quick reference."
 echo ""
 
 # Opens new terminal window/tab with Claude session
-open_worktree_session "$WORKTREE_PATH" "$BEAD_ID"
+MODEL="${MODEL:-opus}"
+TERMINAL=$(get_swe_terminal)
+
+# For Ghostty, start zmx session in background first
+if [ "$TERMINAL" = "ghostty" ]; then
+  echo "Starting zmx session with model: $MODEL"
+  start_zmx_session_background "$WORKTREE_PATH" "$BEAD_ID" false "$MODEL"
+fi
+
+# Open terminal and attach to session
+open_worktree_session "$WORKTREE_PATH" "$BEAD_ID" "$MODEL"
 
 echo "✅ Claude session opened in new terminal."

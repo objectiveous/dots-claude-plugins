@@ -103,7 +103,7 @@ else
       echo ""
       echo "Options:"
       echo "  1. Merge to main locally: git checkout main && git merge $BRANCH"
-      echo "  2. Create a PR: /dots-swe:done"
+      echo "  2. Mark code complete and create PR: /dots-swe:code-complete"
       echo "  3. Force cleanup: /dots-swe:finish --force"
       exit 1
     fi
@@ -179,6 +179,9 @@ if bd close "$BEAD_ID" 2>/dev/null; then
 else
   echo "   ⚠️  Failed to close bead (may already be closed)"
 fi
+
+# Remove swe:done label if present
+bd label remove "$BEAD_ID" swe:done 2>/dev/null
 
 # Kill session
 echo "🔌 Killing session..."

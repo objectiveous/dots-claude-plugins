@@ -31,8 +31,11 @@ get_current_bead() {
 # =============================================================================
 
 # Claude options for new sessions
+# Usage: get_claude_options [model]
+# model: opus (default), sonnet, haiku
 get_claude_options() {
-  echo "--dangerously-skip-permissions --model opus"
+  local model="${1:-opus}"
+  echo "--dangerously-skip-permissions --model $model"
 }
 
 # Get tmux session name from epic/feature ID
@@ -68,11 +71,13 @@ add_tmux_window() {
 }
 
 # Start Claude in a tmux window
+# Usage: start_claude_in_window <session> <window_name> [model]
 start_claude_in_window() {
   local session="$1"
   local window_name="$2"
+  local model="${3:-opus}"
   local claude_opts
-  claude_opts=$(get_claude_options)
+  claude_opts=$(get_claude_options "$model")
 
   tmux send-keys -t "$session:$window_name" "claude $claude_opts" Enter
 }
@@ -186,21 +191,23 @@ open_ghostty_zmx_session() {
 }
 
 # Start Claude in background zmx session (for batch operations)
+# Usage: start_zmx_session_background <worktree_path> <session_name> [no_auto] [model]
 start_zmx_session_background() {
   local worktree_path="$1"
   local session_name="$2"
   local no_auto="${3:-false}"  # optional: prevent auto-start
+  local model="${4:-opus}"     # optional: model (opus, sonnet, haiku)
   local abs_path claude_opts
 
   abs_path="$(cd "$worktree_path" && pwd)"
 
   if [ "$no_auto" = "true" ]; then
     # Start Claude without automatic prompts - waits for human input
-    # Use --dangerously-skip-permissions but NOT --model opus to avoid auto-start
+    # Use --dangerously-skip-permissions but NOT --model to avoid auto-start
     (cd "$abs_path" && zmx run "$session_name" claude --dangerously-skip-permissions)
   else
     # Normal start with full options
-    claude_opts=$(get_claude_options)
+    claude_opts=$(get_claude_options "$model")
     (cd "$abs_path" && zmx run "$session_name" claude $claude_opts)
   fi
 }
@@ -239,9 +246,11 @@ attach_terminal_to_tmux() {
 
 # Open worktree session - main dispatcher
 # Uses zmx+Ghostty for Ghostty, tmux+AppleScript for iTerm
+# Usage: open_worktree_session <worktree_path> <session_name> [model]
 open_worktree_session() {
   local worktree_path="$1"
   local session_name="$2"
+  local model="${3:-opus}"
   local terminal
 
   terminal=$(get_swe_terminal)
@@ -249,20 +258,23 @@ open_worktree_session() {
   case "$terminal" in
     ghostty)
       # Opens new Ghostty window/tab with zmx session
+      # Note: zmx session must be started separately with start_zmx_session_background
       open_ghostty_zmx_session "$worktree_path" "$session_name"
       ;;
     *)
       # iTerm: use tmux in background + AppleScript to attach
-      open_tmux_worktree "$worktree_path" "$session_name"
+      open_tmux_worktree "$worktree_path" "$session_name" "$session_name" "$model"
       ;;
   esac
 }
 
 # Open worktree in tmux (creates session/window as needed)
+# Usage: open_tmux_worktree <worktree_path> <bead_id> [window_name] [model]
 open_tmux_worktree() {
   local worktree_path="$1"
   local bead_id="$2"
   local window_name="${3:-$bead_id}"
+  local model="${4:-opus}"
   local abs_path session_name
 
   abs_path="$(cd "$worktree_path" && pwd)"
@@ -277,7 +289,7 @@ open_tmux_worktree() {
   fi
 
   # Start Claude in the window
-  start_claude_in_window "$session_name" "$window_name"
+  start_claude_in_window "$session_name" "$window_name" "$model"
 
   # Return session name for tracking
   echo "$session_name"
@@ -350,11 +362,13 @@ get_worktree_info() {
 }
 
 # Open iTerm tab with Claude session (legacy wrapper for tmux)
+# Usage: open_iterm_claude_session <worktree_path> [model]
 open_iterm_claude_session() {
   local worktree_path="$1"
+  local model="${2:-opus}"
   local bead_id
   bead_id=$(basename "$worktree_path")
-  open_tmux_worktree "$worktree_path" "$bead_id"
+  open_tmux_worktree "$worktree_path" "$bead_id" "$bead_id" "$model"
 }
 
 # Close iTerm tab by ID
@@ -634,9 +648,18 @@ create_worktrees() {
 # Open sessions and register worktrees
 # For Ghostty: uses zmx (starts in background, then attaches to first)
 # For iTerm: uses tmux (creates windows, then attaches via AppleScript)
+# Usage: open_and_register_worktrees <worktrees_dir> [model] <branch1> [branch2] ...
 open_and_register_worktrees() {
   local worktrees_dir="$1"
   shift
+  local model="opus"
+
+  # Check if first arg is a model name
+  if [ "$1" = "opus" ] || [ "$1" = "sonnet" ] || [ "$1" = "haiku" ]; then
+    model="$1"
+    shift
+  fi
+
   local branch worktree_dir abs_path session_name
   local first_session=""
   local terminal
@@ -649,13 +672,13 @@ open_and_register_worktrees() {
     abs_path="$(cd "$worktree_dir" && pwd)"
 
     if [ "$terminal" = "ghostty" ]; then
-      echo "Creating zmx session for: $branch"
-      start_zmx_session_background "$worktree_dir" "$branch"
+      echo "Creating zmx session for: $branch (model: $model)"
+      start_zmx_session_background "$worktree_dir" "$branch" false "$model"
       session_name="$branch"
       echo "$session_name" > "$worktree_dir/.zmx-session"
     else
-      echo "Creating tmux window for: $branch"
-      session_name=$(open_tmux_worktree "$worktree_dir" "$branch")
+      echo "Creating tmux window for: $branch (model: $model)"
+      session_name=$(open_tmux_worktree "$worktree_dir" "$branch" "$branch" "$model")
       echo "$session_name" > "$worktree_dir/.tmux-session"
     fi
 
@@ -744,4 +767,59 @@ delete_worktrees() {
     echo "Worktree '$worktree_name' deleted."
     echo ""
   done
+}
+
+# =============================================================================
+# swe:done Label Workflow Helpers
+# =============================================================================
+
+# Check if branch is merged to main (local or via PR)
+# Returns: "local", "pr", or "no"
+is_branch_merged() {
+  local branch="$1"
+
+  # Check local merge
+  if git branch --merged main 2>/dev/null | sed 's/^[+ ]*//' | grep -q "^${branch}$"; then
+    echo "local"
+    return 0
+  fi
+
+  # Check PR merge
+  local pr_info=$(gh pr list --head "$branch" --state merged --json number 2>/dev/null)
+  if [ -n "$pr_info" ] && [ "$pr_info" != "[]" ]; then
+    echo "pr"
+    return 0
+  fi
+
+  echo "no"
+  return 1
+}
+
+# Get cleanup resources for a bead
+# Returns: comma-separated list of resources (worktree, zmx/tmux, branch, remote)
+get_cleanup_resources() {
+  local bead_id="$1"
+  local worktrees_dir=$(get_worktrees_dir)
+  local worktree_path="$worktrees_dir/$bead_id"
+  local terminal=$(get_swe_terminal)
+
+  local resources=""
+
+  # Check worktree
+  [ -d "$worktree_path" ] && resources="worktree"
+
+  # Check session
+  if [ "$terminal" = "ghostty" ]; then
+    zmx_session_exists "$bead_id" && resources="${resources:+$resources,}zmx"
+  else
+    tmux_session_exists "$bead_id" && resources="${resources:+$resources,}tmux"
+  fi
+
+  # Check local branch
+  git show-ref --verify --quiet "refs/heads/$bead_id" && resources="${resources:+$resources,}branch"
+
+  # Check remote branch
+  git ls-remote --heads origin "$bead_id" 2>/dev/null | grep -q . && resources="${resources:+$resources,}remote"
+
+  echo "$resources"
 }

@@ -116,11 +116,11 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
    Co-Authored-By: Claude <opus|sonnet> <noreply@anthropic.com>"
    ```
 
-2. **Run ship protocol**
+2. **Mark code complete**
    ```
-   /dots-swe:done
+   /dots-swe:code-complete
    ```
-   This pushes and updates bead to `ready_to_merge`.
+   This runs quality gates, pushes, and updates bead to `ready_to_merge` with `swe:done` label.
 
 3. **Session close protocol**
    ```bash
@@ -257,7 +257,7 @@ Co-Authored-By: Claude <opus|sonnet> <noreply@anthropic.com>
 ```bash
 # Quality gates
 /dots-swe:process-check              # Test, lint, build
-/dots-swe:done               # Check + push + update bead
+/dots-swe:code-complete              # Check + push + update bead
 
 # Bead management
 bd show <id>                 # View bead details

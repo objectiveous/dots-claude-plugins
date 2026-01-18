@@ -19,14 +19,16 @@ Software engineering tools for Claude Code - work management, beads integration,
 | `/dots-swe:dispatch <bead-id>` | Start work on a bead (creates workspace, opens Claude) |
 | `/dots-swe:continue [bead-id]` | Continue work (reattach to existing session) |
 | `/dots-swe:reconnect` | Reconnect to stranded worktrees (without active sessions) |
-| `/dots-swe:finish [bead-id]` | Finish work (verify PR merged, cleanup) |
+| `/dots-swe:cleanup-status` | Show swe:done beads ready for cleanup |
+| `/dots-swe:cleanup [bead-id...]` | Batch cleanup of merged swe:done work |
+| `/dots-swe:finish [bead-id]` | Finish single bead (verify PR merged, cleanup) |
 
 ### Quality & Shipping
 
 | Command | Description |
 |---------|-------------|
 | `/dots-swe:process-check` | Run quality gates: test, lint, build |
-| `/dots-swe:done` | Full protocol: test, lint, build, push, update bead |
+| `/dots-swe:code-complete` | Mark code complete: test, lint, build, push, update bead |
 | `/dots-swe:doctor` | Health check for repository |
 
 ### Beads
@@ -54,15 +56,19 @@ Software engineering tools for Claude Code - work management, beads integration,
 ┌─────────────────────────────────────────────────────────────┐
 │  bd ready          # Find available work                    │
 │       ↓                                                     │
-│  /dots-swe:dispatch dots-abc    # Start work                │
+│  /dots-swe:dispatch dots-abc         # Start work           │
 │       ↓                                                     │
 │  ... work in new Claude session ...                         │
 │       ↓                                                     │
-│  /dots-swe:done              # Push and update bead         │
+│  /dots-swe:code-complete             # Mark code complete   │
 │       ↓                                                     │
 │  ... PR reviewed and merged ...                             │
 │       ↓                                                     │
-│  /dots-swe:finish            # Cleanup                      │
+│  /dots-swe:cleanup-status    # See what's ready for cleanup │
+│       ↓                                                     │
+│  /dots-swe:cleanup           # Batch cleanup all merged     │
+│  OR                                                         │
+│  /dots-swe:finish dots-abc   # Single bead cleanup          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -97,6 +103,6 @@ In each workspace:
 
 ```bash
 /dots-swe:dispatch --help
+/dots-swe:code-complete --help
 /dots-swe:finish --help
-/dots-swe:done --help
 ```
