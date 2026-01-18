@@ -96,18 +96,26 @@ echo "Beads Sync Status"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
+BEADS_SYNC_CONFIGURED=false
 if command -v bd >/dev/null 2>&1; then
   # Check if .beads directory exists
   if [ -d ".beads" ]; then
-    # Check if sync is configured
-    SYNC_OUTPUT=$(bd sync --status 2>&1)
-    if echo "$SYNC_OUTPUT" | grep -q "sync.branch not configured"; then
-      echo "ℹ️  Beads sync not configured (optional)"
-    elif echo "$SYNC_OUTPUT" | grep -q "up to date\|nothing to sync"; then
-      echo "✅ Beads in sync"
+    # Check if sync-branch is configured (uncommented in config.yaml)
+    if [ -f ".beads/config.yaml" ] && grep -qE "^sync-branch:" ".beads/config.yaml" 2>/dev/null; then
+      BEADS_SYNC_CONFIGURED=true
+    fi
+
+    if [ "$BEADS_SYNC_CONFIGURED" = "true" ]; then
+      # Sync is configured, check status
+      SYNC_OUTPUT=$(bd sync --status 2>&1)
+      if echo "$SYNC_OUTPUT" | grep -q "up to date\|nothing to sync"; then
+        echo "✅ Beads in sync"
+      else
+        echo "⚠️  Beads needs sync - run: bd sync"
+        ISSUES_FOUND=$((ISSUES_FOUND + 1))
+      fi
     else
-      echo "⚠️  Beads needs sync - run: bd sync"
-      ISSUES_FOUND=$((ISSUES_FOUND + 1))
+      echo "ℹ️  Beads sync not configured (sync-branch not set)"
     fi
   else
     echo "ℹ️  No beads in this repository"
@@ -130,6 +138,8 @@ else
   echo ""
   echo "Recommendations:"
   echo "  - Commit or stash uncommitted changes"
-  echo "  - Run bd sync to synchronize beads"
+  if [ "$BEADS_SYNC_CONFIGURED" = "true" ]; then
+    echo "  - Run bd sync to synchronize beads"
+  fi
   echo "  - Fix any configuration issues shown above"
 fi
