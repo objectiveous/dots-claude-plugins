@@ -59,6 +59,8 @@ Software engineering tools for Claude Code - work management, beads integration,
 │       ↓                                                     │
 │  ... work in new Claude session ...                         │
 │       ↓                                                     │
+│  git rebase -i main                  # Squash commits       │
+│       ↓                                                     │
 │  /dots-swe:code-complete             # Mark code complete   │
 │       ↓                                                     │
 │  ... PR reviewed and merged ...                             │
@@ -70,6 +72,8 @@ Software engineering tools for Claude Code - work management, beads integration,
 │  /dots-swe:code-integrate <id>    # Integrate specific bead │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+**Before code-complete:** Squash commits into logical units using `git rebase -i main`
 
 **If you need to step away:**
 ```bash
