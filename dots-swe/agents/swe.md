@@ -116,13 +116,27 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
    Co-Authored-By: Claude <opus|sonnet> <noreply@anthropic.com>"
    ```
 
-2. **Mark code complete**
+2. **Squash commits into logical units**
+   ```bash
+   # Review your commit history
+   git log --oneline main..HEAD
+
+   # Squash if you have multiple commits
+   git rebase -i main
+
+   # In the editor:
+   # - pick first commit
+   # - fixup/squash subsequent commits
+   # Target: 1-3 logical commits, not 10+ micro-commits
+   ```
+
+3. **Mark code complete**
    ```
    /dots-swe:code-complete
    ```
    This runs quality gates, pushes, and adds `swe:code-complete` label to signal completion.
 
-3. **Session close protocol**
+4. **Session close protocol**
    ```bash
    git status          # Verify clean
    bd sync             # Sync bead changes
@@ -214,6 +228,7 @@ When done, summarize:
 - Added 2 new files
 - 150 lines added, 20 removed
 
+**Commits:** 2 logical commits (squashed from 8)
 **Quality gates:** All passed
 **Status:** Pushed, swe:code-complete label added
 
@@ -252,6 +267,108 @@ Co-Authored-By: Claude <opus|sonnet> <noreply@anthropic.com>
 
 **Types:** feat, fix, docs, chore, refactor, test
 
+## Squashing Commits for Clean History
+
+Before merging to main, squash your commits into logical units. Clean commit history makes code review easier and git history more useful.
+
+### When to Squash
+
+**Always squash before shipping:**
+- Multiple micro-commits ("fix typo", "oops", "actually fix it")
+- Work-in-progress commits during development
+- Commits that fix mistakes in earlier commits
+- Any commit series that doesn't tell a clear story
+
+**Keep as separate commits when:**
+- Each commit represents a complete, logical change
+- Commits touch different subsystems
+- You want to preserve separate review points
+
+### How to Squash
+
+```bash
+# 1. Check how many commits you've made
+git log --oneline main..HEAD
+
+# 2. Start interactive rebase from main
+git rebase -i main
+
+# 3. In the editor, mark commits to squash:
+#    - pick: Keep this commit
+#    - squash: Merge into previous, combine messages
+#    - fixup: Merge into previous, discard message
+
+# Example interactive rebase:
+pick abc1234 feat(auth): implement user login
+fixup def5678 fix typo in login form
+fixup 012abcd add missing import
+squash 345cdef add login tests
+pick 678ef01 docs(auth): add login documentation
+
+# 4. Save and close - Git will combine commits
+# 5. Edit the combined commit message
+# 6. Force push to your branch (if already pushed)
+git push --force-with-lease
+```
+
+### Pick vs Squash vs Fixup
+
+**pick** - Keep the commit as-is
+```
+Use for: Logical, complete commits you want to preserve
+```
+
+**squash** - Merge into previous commit, keep both messages
+```
+Use for: Related work where both commit messages add context
+Example: Feature implementation + comprehensive tests
+```
+
+**fixup** - Merge into previous commit, discard message
+```
+Use for: Corrections, typos, forgotten files
+Example: "fix lint error", "add missing file"
+```
+
+### Good Squashing Examples
+
+**Before squashing:**
+```
+a1b2c3d feat: add user profile page
+b2c3d4e fix: typo in profile
+c3d4e5f fix: missing import
+d4e5f6g refactor: extract profile component
+e5f6g7h test: add profile tests
+f6g7h8i fix: test formatting
+```
+
+**After squashing:**
+```
+a1b2c3d feat(profile): add user profile page with tests
+d4e5f6g refactor(profile): extract reusable profile component
+```
+
+**Reasoning:**
+- Squashed initial implementation + typo fixes + tests into one commit
+- Kept refactor separate (different logical change)
+- Discarded noise commits (typos, formatting)
+
+### Checking Before Shipping
+
+Before running `/dots-swe:code-complete`:
+
+```bash
+# Review commit count
+git log --oneline main..HEAD
+
+# If more than 2-3 commits, ask yourself:
+# - Does each commit tell a complete story?
+# - Can any be combined?
+# - Are there fixup commits?
+```
+
+**Target:** 1-3 logical commits per feature/fix, not 10+ micro-commits.
+
 ## Quick Reference Commands
 
 ```bash
@@ -279,4 +396,5 @@ git log --oneline -5         # Recent history
 3. **Ask don't guess** - Clarify ambiguous requirements
 4. **Search before coding** - Find existing patterns
 5. **Test and verify** - Run /dots-swe:process-check frequently
-6. **Communicate clearly** - Show what's done, what's left, what's blocked
+6. **Squash before shipping** - Clean commit history (1-3 logical commits)
+7. **Communicate clearly** - Show what's done, what's left, what's blocked
