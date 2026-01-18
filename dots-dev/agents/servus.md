@@ -77,7 +77,7 @@ There's a live person here who may answer immediately. Just ask your question in
 CREATOR=$(bd show <id> --json | jq -r '.[0].created_by')
 bd update <id> --status=blocked --assignee=$CREATOR
 bd comment <id> "Blocked: <explain the issue>"
-bd sync
+bd sync --message "chore: sync beads database"
 ```
 
 The dominus is the formal escalation that ensures tracking.
@@ -151,7 +151,7 @@ git push -u origin $(git branch --show-current)
 gh pr create --base main --fill
 gh pr checks --watch
 bd update <id> --status=ready_to_merge
-bd sync
+bd sync --message "chore: sync beads database"
 ```
 
 ## When Invoked (Quick Reference)

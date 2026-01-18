@@ -162,7 +162,7 @@ fi
   echo "Adding completion marker to bead $CURRENT_BEAD..."
   bd comment "$CURRENT_BEAD" "Code complete - quality gates passed, ready for PR and merge" 2>/dev/null
   bd label add "$CURRENT_BEAD" swe:code-complete 2>/dev/null
-  bd sync 2>/dev/null
+  bd sync --message "chore: sync beads database" 2>/dev/null
   echo "Bead updated (status: in_progress, label: swe:code-complete)"
 else
   echo "No bead associated with this worktree"
