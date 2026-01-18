@@ -36,14 +36,46 @@ Merge the specified worktree's branch back to main.
    git pull origin main
    ```
 
-6. **Merge the branch**: Run `git merge <branch-name> --no-ff -m "Merge branch '<branch-name>'"`. If conflicts occur, inform user how to resolve.
+6. **Show commits to be merged**: Display the commits that will be merged:
+   ```bash
+   git log main..<branch-name> --oneline
+   ```
 
-7. **Push main**: Run `git push origin main`.
+7. **Prompt for Conventional Commit message**: Ask the user for:
+   - **Type**: feat, fix, chore, refactor, docs, test, perf, ci, build, or revert
+   - **Scope** (optional): e.g., auth, api, ui
+   - **Description**: Brief summary of what's being merged
 
-8. **If `--cleanup` flag provided**:
+   Format the subject line as: `type(scope): description` or `type: description` if no scope.
+
+8. **Generate merge commit message**: Create a properly formatted commit message with:
+   - **Subject**: The conventional commit format from step 7
+   - **Body**: Summary of commits being merged (extracted from git log output)
+   - **Footer**: `Merged branch: <branch-name>`
+
+   Example format:
+   ```
+   feat(auth): add OAuth integration
+
+   - Add OAuth 2.0 provider configuration
+   - Implement token refresh logic
+   - Add session management
+
+   Merged branch: feature/oauth
+   ```
+
+9. **Merge the branch**: Run the merge with the generated message:
+   ```bash
+   git merge <branch-name> --no-ff -m "<full-commit-message>"
+   ```
+   If conflicts occur, inform user how to resolve.
+
+10. **Push main**: Run `git push origin main`.
+
+11. **If `--cleanup` flag provided**:
    - Get tab_id from registry and close iTerm tab
    - Remove worktree: `git worktree remove <path> --force`
    - Delete branch: `git branch -d <branch-name>`
    - Remove from registry
 
-9. **Show success message** with merge confirmation.
+12. **Show success message** with merge confirmation.
