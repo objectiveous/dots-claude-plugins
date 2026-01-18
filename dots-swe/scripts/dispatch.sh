@@ -243,7 +243,7 @@ $BEAD_INFO
 - Run \`/dots-swe:process-check\` before committing to verify tests, lint, and build
 - Run \`/dots-swe:code-complete\` when code is ready for review and merge
 - Update bead status: \`bd update $BEAD_ID --status=<status>\`
-  - Statuses: \`in_progress\`, \`blocked\`, \`ready_to_merge\`
+  - Statuses: \`in_progress\`, \`blocked\`, \`open\`, \`closed\`
 - Add notes: \`bd comment $BEAD_ID "Your comment here"\`
 
 ## Quality Checklist

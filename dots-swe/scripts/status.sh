@@ -177,15 +177,17 @@ echo ""
 # Ready to Merge
 # ═══════════════════════════════════════════════════════════════════
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🎁 Ready to Merge/Finish"
+echo "🎁 Ready to Integrate"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Check for issues marked ready_to_merge
-READY_TO_MERGE=$(bd list --status=ready_to_merge 2>/dev/null | grep -v "^$")
-if [ -n "$READY_TO_MERGE" ]; then
-  echo "Marked ready to merge:"
-  echo "$READY_TO_MERGE"
+# Check for issues marked with swe:done label
+SWE_DONE=$(bd list --label swe:done 2>/dev/null | grep -v "^$")
+if [ -n "$SWE_DONE" ]; then
+  echo "Code complete (swe:done label):"
+  echo "$SWE_DONE"
+  echo ""
+  echo "  Run: /dots-swe:code-integrate-status for details"
   echo ""
 fi
 

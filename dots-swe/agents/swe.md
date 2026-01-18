@@ -120,7 +120,7 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
    ```
    /dots-swe:code-complete
    ```
-   This runs quality gates, pushes, and updates bead to `ready_to_merge` with `swe:done` label.
+   This runs quality gates, pushes, and adds `swe:done` label to signal completion.
 
 3. **Session close protocol**
    ```bash
@@ -215,7 +215,7 @@ When done, summarize:
 - 150 lines added, 20 removed
 
 **Quality gates:** All passed
-**Status:** Pushed, bead updated to ready_to_merge
+**Status:** Pushed, swe:done label added
 
 **Next steps (for reviewer):**
 - Create PR

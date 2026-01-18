@@ -14,7 +14,7 @@ execution-mode: atomic-bash
 
 Marks code as complete by running quality gates, pushing to remote, and updating bead status.
 
-**Note:** This command does NOT create a PR. The bead status `ready_to_merge` and `swe:done` label signal to another agent or human reviewer that work is ready for PR creation and merge.
+**Note:** This command does NOT create a PR. The `swe:done` label signals to another agent or human reviewer that work is ready for PR creation and merge.
 
 **Usage:** `/dots-swe:code-complete [--skip-tests] [--skip-lint] [--skip-build]`
 
@@ -55,8 +55,8 @@ Marks code as complete by running quality gates, pushing to remote, and updating
   echo "  3. Run linter"
   echo "  4. Run build"
   echo "  5. Push to remote"
-  echo "  6. Update bead status to ready_to_merge"
-  echo "  7. Add swe:done label"
+  echo "  6. Add comment to bead"
+  echo "  7. Add swe:done label (keeps status: in_progress)"
   echo ""
   echo "Note: PR creation is handled separately by a reviewer agent or human."
   exit 0
@@ -154,17 +154,16 @@ fi
 !echo "Push complete"
 !echo ""
 
-# Step 5: Update bead status
+# Step 5: Update bead with completion marker
 !echo "------------------------------------------------------------------"
-!echo "Step 5: Updating bead status..."
+!echo "Step 5: Marking code complete..."
 !CURRENT_BEAD=$(get_current_bead)
 !if [ -n "$CURRENT_BEAD" ]; then
-  echo "Updating bead $CURRENT_BEAD to ready_to_merge..."
-  bd update "$CURRENT_BEAD" --status=ready_to_merge 2>/dev/null
+  echo "Adding completion marker to bead $CURRENT_BEAD..."
   bd comment "$CURRENT_BEAD" "Code complete - quality gates passed, ready for PR and merge" 2>/dev/null
-  bd sync 2>/dev/null
   bd label add "$CURRENT_BEAD" swe:done 2>/dev/null
-  echo "Bead updated (status: ready_to_merge, label: swe:done)"
+  bd sync 2>/dev/null
+  echo "Bead updated (status: in_progress, label: swe:done)"
 else
   echo "No bead associated with this worktree"
 fi
