@@ -21,17 +21,22 @@ done
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "Usage: /dots-swe:finish [options] [bead-id]"
   echo ""
-  echo "Finish work on a bead after PR is merged."
+  echo "Finish work on a bead after merging to main."
   echo ""
   echo "Options:"
   echo "  --dry-run, -n    Show what would happen without doing it"
-  echo "  --force, -f      Skip PR merge check (use with caution)"
+  echo "  --force, -f      Skip merge check (use with caution)"
   echo ""
   echo "What this does:"
-  echo "  1. Verifies PR was opened and merged to main"
+  echo "  1. Verifies branch was merged to main (locally or via PR)"
   echo "  2. Closes the bead"
   echo "  3. Kills the session (zmx/tmux)"
   echo "  4. Deletes the worktree and branch"
+  echo ""
+  echo "Merge verification:"
+  echo "  - First checks if branch merged to main locally"
+  echo "  - If not, checks for merged PR"
+  echo "  - Use --force to skip verification"
   echo ""
   echo "If no bead-id provided, uses current directory's .swe-bead file."
   echo ""
@@ -76,49 +81,62 @@ fi
 # Get branch name (same as bead ID in our workflow)
 BRANCH="$BEAD_ID"
 
-# Check for PR
-echo "🔍 Checking for PR..."
-PR_INFO=$(gh pr list --head "$BRANCH" --state all --json number,state,mergedAt,url 2>/dev/null)
-
-if [ -z "$PR_INFO" ] || [ "$PR_INFO" = "[]" ]; then
-  echo "❌ No PR found for branch: $BRANCH"
-  if [ "$FORCE" = true ]; then
-    echo "   --force specified, continuing anyway..."
-  else
-    echo ""
-    echo "Create a PR first with: /dots-swe:ship"
-    echo "Or use --force to skip this check"
-    exit 1
-  fi
+# First check if branch was merged to main locally
+echo "🔍 Checking merge status..."
+MERGED_LOCALLY=false
+if git branch --merged main 2>/dev/null | sed 's/^[+ ]*//' | grep -q "^${BRANCH}$"; then
+  MERGED_LOCALLY=true
+  echo "   ✅ Branch merged to main locally"
+  echo ""
 else
-  PR_NUMBER=$(echo "$PR_INFO" | jq -r '.[0].number')
-  PR_STATE=$(echo "$PR_INFO" | jq -r '.[0].state')
-  PR_MERGED=$(echo "$PR_INFO" | jq -r '.[0].mergedAt')
-  PR_URL=$(echo "$PR_INFO" | jq -r '.[0].url')
+  # Not merged locally, check for PR
+  echo "   Branch not merged locally, checking for PR..."
+  PR_INFO=$(gh pr list --head "$BRANCH" --state all --json number,state,mergedAt,url 2>/dev/null)
 
-  echo "   PR #$PR_NUMBER: $PR_STATE"
-  echo "   $PR_URL"
-
-  if [ "$PR_STATE" = "MERGED" ] || [ "$PR_MERGED" != "null" ]; then
-    echo "   ✅ PR is merged"
-  elif [ "$PR_STATE" = "CLOSED" ]; then
-    echo "   ⚠️  PR was closed without merging"
-    if [ "$FORCE" != true ]; then
+  if [ -z "$PR_INFO" ] || [ "$PR_INFO" = "[]" ]; then
+    echo "   ❌ No PR found for branch: $BRANCH"
+    if [ "$FORCE" = true ]; then
+      echo "   --force specified, continuing anyway..."
+    else
       echo ""
-      echo "Use --force to cleanup anyway"
+      echo "This branch has not been merged to main and has no PR."
+      echo ""
+      echo "Options:"
+      echo "  1. Merge to main locally: git checkout main && git merge $BRANCH"
+      echo "  2. Create a PR: /dots-swe:ship"
+      echo "  3. Force cleanup: /dots-swe:finish --force"
       exit 1
     fi
   else
-    echo "   ❌ PR is still open (state: $PR_STATE)"
-    if [ "$FORCE" != true ]; then
-      echo ""
-      echo "Merge the PR first, or use --force to cleanup anyway"
-      exit 1
+    PR_NUMBER=$(echo "$PR_INFO" | jq -r '.[0].number')
+    PR_STATE=$(echo "$PR_INFO" | jq -r '.[0].state')
+    PR_MERGED=$(echo "$PR_INFO" | jq -r '.[0].mergedAt')
+    PR_URL=$(echo "$PR_INFO" | jq -r '.[0].url')
+
+    echo "   PR #$PR_NUMBER: $PR_STATE"
+    echo "   $PR_URL"
+
+    if [ "$PR_STATE" = "MERGED" ] || [ "$PR_MERGED" != "null" ]; then
+      echo "   ✅ PR is merged"
+    elif [ "$PR_STATE" = "CLOSED" ]; then
+      echo "   ⚠️  PR was closed without merging"
+      if [ "$FORCE" != true ]; then
+        echo ""
+        echo "Use --force to cleanup anyway"
+        exit 1
+      fi
+    else
+      echo "   ❌ PR is still open (state: $PR_STATE)"
+      if [ "$FORCE" != true ]; then
+        echo ""
+        echo "Merge the PR first, or use --force to cleanup anyway"
+        exit 1
+      fi
+      echo "   --force specified, continuing anyway..."
     fi
-    echo "   --force specified, continuing anyway..."
   fi
+  echo ""
 fi
-echo ""
 
 # Dry run - show what would happen
 if [ "$DRY_RUN" = true ]; then
@@ -200,4 +218,8 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Finished: $BEAD_ID"
 echo ""
-echo "The PR has been merged and all local resources cleaned up."
+if [ "$MERGED_LOCALLY" = true ]; then
+  echo "Branch was merged to main locally and all resources cleaned up."
+else
+  echo "The PR has been merged and all local resources cleaned up."
+fi
