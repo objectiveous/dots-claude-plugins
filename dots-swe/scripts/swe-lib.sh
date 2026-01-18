@@ -141,7 +141,7 @@ open_ghostty_zmx_window() {
   claude_opts=$(get_claude_options)
 
   # Open new Ghostty window with zmx attach command
-  open -na Ghostty --args --working-directory="$abs_path" -e zmx attach "$session_name" claude $claude_opts
+  open -na Ghostty --args --title="$session_name" --working-directory="$abs_path" -e zmx attach "$session_name" claude $claude_opts
 }
 
 # Open new Ghostty tab with zmx session
@@ -163,7 +163,7 @@ tell application "System Events"
     tell process "ghostty"
         keystroke "t" using command down
         delay 0.3
-        keystroke "cd '$abs_path' && zmx attach '$session_name' claude $claude_opts"
+        keystroke "printf '\\\\033]0;$session_name\\\\007' && cd '$abs_path' && zmx attach '$session_name' claude $claude_opts"
         keystroke return
     end tell
 end tell
@@ -171,11 +171,11 @@ EOF
 }
 
 # Open Ghostty with zmx session (window or tab based on SWE_GHOSTTY_MODE)
-# Set SWE_GHOSTTY_MODE=tab for tabs, default is window
+# Set SWE_GHOSTTY_MODE=window for windows, default is tab
 open_ghostty_zmx_session() {
   local worktree_path="$1"
   local session_name="$2"
-  local mode="${SWE_GHOSTTY_MODE:-window}"
+  local mode="${SWE_GHOSTTY_MODE:-tab}"
 
   case "$mode" in
     tab)
@@ -530,7 +530,7 @@ open_and_register_worktrees() {
   if [ -n "$first_session" ]; then
     echo ""
     if [ "$terminal" = "ghostty" ]; then
-      local mode="${SWE_GHOSTTY_MODE:-window}"
+      local mode="${SWE_GHOSTTY_MODE:-tab}"
       echo "Opening Ghostty $mode for zmx session: $first_session"
       echo "(Other sessions running in background - use 'zmx attach <name>' to switch)"
       worktree_dir="$worktrees_dir/$first_session"

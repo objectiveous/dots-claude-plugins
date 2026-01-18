@@ -81,8 +81,8 @@ Software engineering tools for Claude Code - work management, beads integration,
 | iTerm2 | tmux | close window | `/dots-swe:continue` or tmux attach |
 
 **Options for Ghostty:**
-- `--window` (default): Open in new window
-- `--tab`: Open in new tab
+- `--tab` (default): Open in new tab
+- `--window`: Open in new window
 
 ## Context Files
 

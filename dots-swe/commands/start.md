@@ -18,18 +18,22 @@ CRITICAL: This skill spawns a NEW session in a workspace. DO NOT work in the cur
 
 Start work on a bead by creating a workspace and opening a Claude session.
 
-**Usage:** `/dots-swe:start [options] <bead-id>`
+**Usage:** `/dots-swe:start [options] [bead-id]`
+
+**Arguments:**
+- `bead-id` - Bead to work on (optional if already in a worktree)
 
 **Options:**
 - `--dry-run, -n` - Show what would happen without doing it
-- `--tab` - Open in a new Ghostty tab (default: window)
+- `--tab` - Open in a new Ghostty tab (default)
 - `--window` - Open in a new Ghostty window
 
 **Examples:**
 ```bash
-/dots-swe:start dots-abc
-/dots-swe:start --tab dots-abc
-/dots-swe:start --dry-run dots-abc
+/dots-swe:start dots-abc           # Open tab for specific bead
+/dots-swe:start --window dots-abc  # Open window instead
+/dots-swe:start                    # Open tab for current worktree
+/dots-swe:start --dry-run dots-abc # Preview what would happen
 ```
 
 ## Implementation

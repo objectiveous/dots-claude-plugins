@@ -29,14 +29,17 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   TERMINAL=$(get_swe_terminal)
   CLAUDE_OPTS=$(get_claude_options)
 
-  echo "Usage: /dots-swe:start [options] <bead-id>"
+  echo "Usage: /dots-swe:start [options] [bead-id]"
   echo ""
   echo "Start work on a bead by creating a worktree and Claude session."
   echo ""
+  echo "Arguments:"
+  echo "  bead-id          Bead to work on (optional if already in a worktree)"
+  echo ""
   echo "Options:"
   echo "  --dry-run, -n    Show what would happen without doing it"
-  echo "  --window         Open Claude in a new Ghostty window (default)"
-  echo "  --tab            Open Claude in a new Ghostty tab"
+  echo "  --tab            Open Claude in a new Ghostty tab (default)"
+  echo "  --window         Open Claude in a new Ghostty window"
   echo ""
   echo "What this does:"
   echo "  • Verifies the bead exists"
@@ -48,7 +51,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "Current setup:"
   echo "  Terminal: $TERMINAL"
   if [ "$TERMINAL" = "ghostty" ]; then
-    echo "  Session:  zmx (opens new Ghostty ${SWE_GHOSTTY_MODE:-window})"
+    echo "  Session:  zmx (opens new Ghostty ${SWE_GHOSTTY_MODE:-tab})"
     echo "  Detach:   ctrl+\\"
     echo "  Reattach: zmx attach <bead-id>"
   else
@@ -56,10 +59,11 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  Reattach: /dots-swe:starttree-attach <session>"
   fi
   echo ""
-  echo "Example:"
-  echo "  /dots-swe:start dots-abc"
-  echo "  /dots-swe:start --tab dots-abc"
-  echo "  /dots-swe:start --dry-run dots-abc"
+  echo "Examples:"
+  echo "  /dots-swe:start dots-abc             # Start work on specific bead (tab)"
+  echo "  /dots-swe:start --window dots-abc    # Open in new window"
+  echo "  /dots-swe:start                      # Open tab for current worktree"
+  echo "  /dots-swe:start --dry-run dots-abc   # Preview what would happen"
   echo ""
   echo "See also:"
   echo "  bd ready          # Find available work"
@@ -67,15 +71,20 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   exit 0
 fi
 
-# Validate arguments
+# Validate arguments - try to detect from .swe-bead if not provided
 if [ -z "$BEAD_ID" ]; then
-  echo "ERROR: No bead ID provided"
+  BEAD_ID=$(get_current_bead)
+  if [ -z "$BEAD_ID" ]; then
+    echo "ERROR: No bead ID provided and not in a worktree"
+    echo ""
+    echo "Usage: /dots-swe:start [--dry-run] <bead-id>"
+    echo ""
+    echo "Available work:"
+    bd ready 2>/dev/null || echo "  (bd command not available)"
+    exit 1
+  fi
+  echo "Detected bead from current worktree: $BEAD_ID"
   echo ""
-  echo "Usage: /dots-swe:start [--dry-run] <bead-id>"
-  echo ""
-  echo "Available work:"
-  bd ready 2>/dev/null || echo "  (bd command not available)"
-  exit 1
 fi
 
 echo "╔══════════════════════════════════════════════════════════════╗"
@@ -108,7 +117,7 @@ CLAUDE_OPTS=$(get_claude_options)
 
 # Dry-run mode - show what would happen
 if [ "$DRY_RUN" = true ]; then
-  MODE="${SWE_GHOSTTY_MODE:-window}"
+  MODE="${SWE_GHOSTTY_MODE:-tab}"
 
   echo ""
   echo "📋 DRY RUN: Here's what would happen"
@@ -156,7 +165,7 @@ if [ "$DRY_RUN" = true ]; then
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "Run without --dry-run to execute"
-  echo "Add --tab to open in a Ghostty tab instead of window"
+  echo "Add --window to open in a Ghostty window instead of tab"
   exit 0
 fi
 
