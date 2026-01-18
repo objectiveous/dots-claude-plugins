@@ -65,3 +65,6 @@ fi
 !echo ""
 !echo "Sync:"
 !echo "  bd sync                      - Sync with git"
+!echo ""
+!echo "Squash commits before merge:"
+!echo "  git rebase -i main           - Squash into logical commits"

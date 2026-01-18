@@ -252,6 +252,63 @@ Co-Authored-By: Claude <opus|sonnet> <noreply@anthropic.com>
 
 **Types:** feat, fix, docs, chore, refactor, test
 
+## Squashing Commits
+
+Before merging to main, squash your feature branch commits into logical units to keep the main branch history clean.
+
+**When to squash:**
+- Right before creating a PR or merging to main
+- After completing work in your feature branch
+- When you have multiple WIP commits, fixups, or checkpoint commits
+
+**How to squash:**
+
+```bash
+# Interactive rebase to squash commits
+git rebase -i main
+
+# In the editor:
+# - Keep first commit as 'pick'
+# - Change subsequent commits to 'squash' or 'fixup'
+# - 'squash' preserves commit messages (for combining work)
+# - 'fixup' discards messages (for trivial changes)
+```
+
+**Example workflow:**
+
+```bash
+# Your feature branch has 5 commits:
+# - "feat: add login form"
+# - "fix typo"
+# - "wip: testing"
+# - "fix: handle edge case"
+# - "update docs"
+
+# Squash into one logical commit before merge:
+git rebase -i main
+
+# Result: One clean commit in main
+# - "feat(auth): implement login form with edge case handling"
+```
+
+**Best practices:**
+- Keep detailed commits in your feature branch during development (safety)
+- Squash into one commit per feature/fix when ready to merge
+- Write a clear, comprehensive commit message after squashing
+- Main branch should have one logical commit per feature/fix
+
+**Alternative - Fixup commits:**
+
+During development, mark trivial commits for auto-squashing:
+
+```bash
+# Make a fixup commit that will auto-squash with the previous commit
+git commit --fixup HEAD
+
+# Later, auto-squash all fixup commits
+git rebase -i --autosquash main
+```
+
 ## Quick Reference Commands
 
 ```bash
