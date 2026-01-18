@@ -32,25 +32,26 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo ""
   echo "Merge Modes:"
   echo "  --local mode:"
-  echo "    • Switches to main, pulls latest"
-  echo "    • Merges branch with --no-ff"
-  echo "    • Pushes to origin"
-  echo "    • Proceeds to cleanup"
+  echo "    1. Creates integration branch (integrate/<bead-id>) from main"
+  echo "    2. Merges feature branch into integration branch"
+  echo "    3. Runs tests on integration branch"
+  echo "    4. If tests pass: merges to main, pushes to origin, cleans up"
+  echo "    5. If tests fail: preserves integration branch for debugging"
   echo ""
   echo "  --remote mode:"
   echo "    • Creates PR if needed (or finds existing)"
   echo "    • Shows PR URL and state"
+  echo "    • Tests run via GitHub CI/Actions"
   echo "    • If PR is open: skips with message to merge manually"
   echo "    • If PR is merged: proceeds to cleanup"
   echo ""
-  echo "For each bead:"
-  echo "  1. Merge to main if not already merged (per merge mode)"
-  echo "  2. Kill zmx/tmux session"
-  echo "  3. Delete worktree"
-  echo "  4. Delete local branch"
-  echo "  5. Delete remote branch (unless --no-remote)"
-  echo "  6. Close bead"
-  echo "  7. Remove swe:code-complete label"
+  echo "For each successfully merged bead:"
+  echo "  1. Kill zmx/tmux session"
+  echo "  2. Delete worktree"
+  echo "  3. Delete local branch"
+  echo "  4. Delete remote branch (unless --no-remote)"
+  echo "  5. Close bead"
+  echo "  6. Remove swe:code-complete label"
   echo ""
   echo "Examples:"
   echo "  /dots-swe:code-integrate --remote                  # PR workflow for all"
@@ -120,6 +121,7 @@ fi
 TO_INTEGRATION=()
 SKIPPED=()
 MERGE_FAILED=()
+TEST_FAILED=()
 
 for BEAD_ID in "${BEAD_IDS[@]}"; do
   # Check merge status
@@ -160,10 +162,24 @@ for BEAD_ID in "${BEAD_IDS[@]}"; do
       fi
     else
       # Local merge workflow
-      echo "   Merging locally to main..."
-      if merge_branch_to_main "$BEAD_ID"; then
-        echo "   ✅ Merged to main"
+      echo "   Merging locally to main with tests..."
+      MERGE_OUTPUT=$(merge_branch_to_main "$BEAD_ID" 2>&1)
+      MERGE_RESULT=$?
+
+      if [ $MERGE_RESULT -eq 0 ]; then
+        echo "   ✅ Merged to main and pushed"
         TO_INTEGRATION+=("$BEAD_ID")
+      elif [ $MERGE_RESULT -eq 2 ]; then
+        echo "   ❌ Tests failed"
+        # Extract integration branch from output
+        INTEGRATION_BRANCH=$(echo "$MERGE_OUTPUT" | grep "tests_failed:" | cut -d: -f2)
+        if [ -n "$INTEGRATION_BRANCH" ]; then
+          TEST_FAILED+=("$BEAD_ID:$INTEGRATION_BRANCH")
+        else
+          TEST_FAILED+=("$BEAD_ID")
+        fi
+        echo ""
+        continue
       else
         echo "   ❌ Merge failed - may have conflicts"
         MERGE_FAILED+=("$BEAD_ID")
@@ -186,6 +202,20 @@ if [ ${#TO_INTEGRATION[@]} -eq 0 ]; then
     done
     echo ""
   fi
+  if [ ${#TEST_FAILED[@]} -gt 0 ]; then
+    echo "Failed tests:"
+    for ENTRY in "${TEST_FAILED[@]}"; do
+      BEAD_ID="${ENTRY%%:*}"
+      INTEGRATION_BRANCH="${ENTRY#*:}"
+      if [ "$INTEGRATION_BRANCH" != "$BEAD_ID" ]; then
+        echo "  - $BEAD_ID (integration branch: $INTEGRATION_BRANCH)"
+        echo "    Fix tests on integration branch, then merge to main manually"
+      else
+        echo "  - $BEAD_ID (tests failed)"
+      fi
+    done
+    echo ""
+  fi
   if [ ${#MERGE_FAILED[@]} -gt 0 ]; then
     echo "Failed to merge:"
     for BEAD_ID in "${MERGE_FAILED[@]}"; do
@@ -193,7 +223,7 @@ if [ ${#TO_INTEGRATION[@]} -eq 0 ]; then
     done
     echo ""
   fi
-  if [ ${#SKIPPED[@]} -eq 0 ] && [ ${#MERGE_FAILED[@]} -eq 0 ]; then
+  if [ ${#SKIPPED[@]} -eq 0 ] && [ ${#MERGE_FAILED[@]} -eq 0 ] && [ ${#TEST_FAILED[@]} -eq 0 ]; then
     echo "Use --force to clean up anyway (not recommended)"
   fi
   exit 0
@@ -223,6 +253,20 @@ if [ ${#SKIPPED[@]} -gt 0 ]; then
   echo "Skipped (PR not merged yet):"
   for BEAD_ID in "${SKIPPED[@]}"; do
     echo "  - $BEAD_ID"
+  done
+fi
+
+if [ ${#TEST_FAILED[@]} -gt 0 ]; then
+  echo ""
+  echo "Failed tests:"
+  for ENTRY in "${TEST_FAILED[@]}"; do
+    BEAD_ID="${ENTRY%%:*}"
+    INTEGRATION_BRANCH="${ENTRY#*:}"
+    if [ "$INTEGRATION_BRANCH" != "$BEAD_ID" ]; then
+      echo "  - $BEAD_ID (integration branch: $INTEGRATION_BRANCH)"
+    else
+      echo "  - $BEAD_ID"
+    fi
   done
 fi
 
@@ -359,6 +403,9 @@ if [ $ERROR_COUNT -gt 0 ]; then
 fi
 if [ ${#SKIPPED[@]} -gt 0 ]; then
   echo "  Skipped (PR pending): ${#SKIPPED[@]}"
+fi
+if [ ${#TEST_FAILED[@]} -gt 0 ]; then
+  echo "  Failed tests: ${#TEST_FAILED[@]}"
 fi
 if [ ${#MERGE_FAILED[@]} -gt 0 ]; then
   echo "  Failed to merge: ${#MERGE_FAILED[@]}"

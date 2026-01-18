@@ -855,38 +855,91 @@ create_or_find_pr() {
   return 1
 }
 
-# Merge branch to main locally
-# Returns: 0 if successful, 1 otherwise
+# Merge branch to main locally with integration branch and tests
+# Returns: 0 if successful, 1 if merge failed, 2 if tests failed
+# Prints: "tests_failed:<integration-branch>" on test failure
 merge_branch_to_main() {
   local branch="$1"
   local current_branch=$(git branch --show-current)
+  local integration_branch="integrate/${branch}"
+  local repo_root=$(get_repo_root)
 
-  # Switch to main
+  echo "   Creating integration branch..."
+
+  # Switch to main and pull latest
   git checkout main 2>/dev/null || return 1
-
-  # Pull latest
   git pull origin main 2>/dev/null || {
     git checkout "$current_branch" 2>/dev/null
     return 1
   }
 
-  # Merge branch
-  if git merge "$branch" --no-ff -m "Merge branch '$branch'" 2>/dev/null; then
-    # Push to origin
-    git push origin main 2>/dev/null || {
+  # Create integration branch from main
+  git checkout -b "$integration_branch" 2>/dev/null || {
+    # Branch might exist, try to use it
+    git checkout "$integration_branch" 2>/dev/null || {
       git checkout "$current_branch" 2>/dev/null
       return 1
     }
+  }
 
-    # Return to original branch
-    git checkout "$current_branch" 2>/dev/null
-    return 0
-  else
-    # Merge failed, abort and return
+  # Merge feature branch into integration branch
+  echo "   Merging $branch into $integration_branch..."
+  if ! git merge "$branch" --no-ff -m "Integrate branch '$branch'" 2>/dev/null; then
+    echo "   ❌ Merge conflict detected"
     git merge --abort 2>/dev/null
+    git checkout "$current_branch" 2>/dev/null
+    git branch -D "$integration_branch" 2>/dev/null
+    return 1
+  fi
+
+  # Run tests on integration branch
+  echo "   Running tests on integration branch..."
+
+  # Detect project commands
+  eval "$(detect_project_commands)"
+
+  if [ -n "$TEST_CMD" ]; then
+    if eval "$TEST_CMD" 2>&1 | sed 's/^/     /'; then
+      echo "   ✅ Tests passed"
+    else
+      echo "   ❌ Tests failed on integration branch"
+      echo "   Integration branch '$integration_branch' preserved for debugging"
+      echo "   To fix: checkout $integration_branch, fix tests, then merge to main manually"
+      git checkout "$current_branch" 2>/dev/null
+      echo "tests_failed:$integration_branch"
+      return 2
+    fi
+  else
+    echo "   ⚠️  No test command detected, skipping tests"
+  fi
+
+  # Tests passed, merge integration branch to main
+  echo "   Merging $integration_branch to main..."
+  git checkout main 2>/dev/null || {
+    git checkout "$current_branch" 2>/dev/null
+    return 1
+  }
+
+  if ! git merge "$integration_branch" --ff-only 2>/dev/null; then
+    echo "   ❌ Fast-forward merge failed (this shouldn't happen)"
     git checkout "$current_branch" 2>/dev/null
     return 1
   fi
+
+  # Push to origin
+  echo "   Pushing main to origin..."
+  if ! git push origin main 2>/dev/null; then
+    echo "   ❌ Push failed"
+    git checkout "$current_branch" 2>/dev/null
+    return 1
+  fi
+
+  # Clean up integration branch
+  git branch -D "$integration_branch" 2>/dev/null
+
+  # Return to original branch
+  git checkout "$current_branch" 2>/dev/null
+  return 0
 }
 
 # Get cleanup resources for a bead

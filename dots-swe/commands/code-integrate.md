@@ -30,17 +30,27 @@ Integrate `swe:code-complete` work into main and clean up resources. Choose betw
 - With bead IDs: processes only specified beads
 
 **Merge Modes:**
-- **--local mode:** Merges branch directly to main, pushes to origin
-- **--remote mode:** Creates/finds PR, waits for manual merge if open
 
-**For each bead:**
-1. Merge to main if not already merged (per merge mode)
-2. Kill zmx/tmux session
-3. Delete worktree
-4. Delete local branch
-5. Delete remote branch (unless --no-remote)
-6. Close bead
-7. Remove swe:code-complete label
+**--local mode:**
+1. Creates integration branch (integrate/<bead-id>) from main
+2. Merges feature branch into integration branch
+3. Runs tests on integration branch
+4. If tests pass: merges to main, pushes to origin, proceeds to cleanup
+5. If tests fail: preserves integration branch for debugging
+
+**--remote mode:**
+- Creates PR if needed (or finds existing)
+- Tests run via GitHub CI/Actions
+- Waits for manual PR merge
+- Once merged, proceeds to cleanup
+
+**For each successfully merged bead:**
+1. Kill zmx/tmux session
+2. Delete worktree
+3. Delete local branch
+4. Delete remote branch (unless --no-remote)
+5. Close bead
+6. Remove swe:code-complete label
 
 **Examples:**
 ```bash
