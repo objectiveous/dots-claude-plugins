@@ -135,23 +135,21 @@ kill_zmx_session() {
 open_ghostty_zmx_window() {
   local worktree_path="$1"
   local session_name="$2"
-  local abs_path claude_opts
+  local abs_path
 
   abs_path="$(cd "$worktree_path" && pwd)"
-  claude_opts=$(get_claude_options)
 
   # Open new Ghostty window with zmx attach command
-  open -na Ghostty --args --title="$session_name" --working-directory="$abs_path" -e zmx attach "$session_name" claude $claude_opts
+  open -na Ghostty --args --title="$session_name" --working-directory="$abs_path" -e zmx attach "$session_name"
 }
 
 # Open new Ghostty tab with zmx session
 open_ghostty_zmx_tab() {
   local worktree_path="$1"
   local session_name="$2"
-  local abs_path claude_opts
+  local abs_path
 
   abs_path="$(cd "$worktree_path" && pwd)"
-  claude_opts=$(get_claude_options)
 
   # Use AppleScript to open new tab and run command
   osascript <<EOF
@@ -163,7 +161,7 @@ tell application "System Events"
     tell process "ghostty"
         keystroke "t" using command down
         delay 0.3
-        keystroke "printf '\\\\033]0;$session_name\\\\007' && cd '$abs_path' && zmx attach '$session_name' claude $claude_opts"
+        keystroke "printf '\\\\033]0;$session_name\\\\007' && cd '$abs_path' && zmx attach '$session_name'"
         keystroke return
     end tell
 end tell
