@@ -18,6 +18,7 @@ Software engineering tools for Claude Code - work management, beads integration,
 | `/dots-swe:status` | Show work status dashboard (epics, in-flight, ready, blocked) |
 | `/dots-swe:dispatch <bead-id>` | Start work on a bead (creates workspace, opens Claude) |
 | `/dots-swe:continue [bead-id]` | Continue work (reattach to existing session) |
+| `/dots-swe:reconnect` | Reconnect to stranded worktrees (without active sessions) |
 | `/dots-swe:finish [bead-id]` | Finish work (verify PR merged, cleanup) |
 
 ### Quality & Shipping
