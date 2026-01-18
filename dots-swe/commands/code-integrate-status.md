@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(bash:*)
-description: Show work ready for cleanup after merge
+description: Show work ready for integration after merge
 execution-mode: atomic-bash
 ---
 
@@ -10,23 +10,23 @@ execution-mode: atomic-bash
 3. Wait for the skill execution output and report the result to the user
 </claude-instructions>
 
-# Cleanup Status
+# Code Integration Status
 
-Shows all `swe:done` labeled beads and their cleanup readiness.
+Shows all `swe:done` labeled beads and their integration readiness.
 
-**Usage:** `/dots-swe:cleanup-status`
+**Usage:** `/dots-swe:code-integrate-status`
 
 **Shows:**
 - Beads with `swe:done` label
 - Merge status for each (MERGED/OPEN PR/NO PR)
-- Resources ready for cleanup (worktree, session, branches)
+- Resources ready for integration (worktree, session, branches)
 - Summary with suggested next actions
 
 **Example:**
 ```bash
-/dots-swe:cleanup-status   # Show all cleanup-ready work
+/dots-swe:code-integrate-status   # Show all integration-ready work
 ```
 
 ## Implementation
 
-!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/cleanup-status.sh 2>/dev/null | head -1)"
+!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/code-integrate-status.sh 2>/dev/null | head -1)"

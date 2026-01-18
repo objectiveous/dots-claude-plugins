@@ -1,30 +1,30 @@
 #!/bin/bash
-# Show cleanup status for swe:done labeled beads
+# Show code integration status for swe:done labeled beads
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/swe-lib.sh"
 
 # Help flag
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  echo "Usage: /dots-swe:cleanup-status"
+  echo "Usage: /dots-swe:code-integrate-status"
   echo ""
-  echo "Show all swe:done labeled beads and their cleanup readiness."
+  echo "Show all swe:done labeled beads and their integration readiness."
   echo ""
   echo "For each bead, shows:"
   echo "  • Merge status (MERGED/OPEN PR/NO PR)"
-  echo "  • Resources to cleanup (worktree, session, branches)"
+  echo "  • Resources ready for integration (worktree, session, branches)"
   echo ""
   echo "Examples:"
-  echo "  /dots-swe:cleanup-status     # Show cleanup status"
+  echo "  /dots-swe:code-integrate-status     # Show integration status"
   echo ""
   echo "See also:"
-  echo "  /dots-swe:cleanup            # Clean up all merged work"
-  echo "  /dots-swe:cleanup <bead-id>  # Clean up specific bead"
+  echo "  /dots-swe:code-integrate            # Integrate all merged work"
+  echo "  /dots-swe:code-integrate <bead-id>  # Integrate specific bead"
   exit 0
 fi
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    Cleanup Status                            ║"
+echo "║              Code Integration Status                         ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -139,7 +139,7 @@ echo "$BEADS" | jq -r '.[].id' | {
     esac
   done
 
-  echo "  Ready for cleanup: $MERGED"
+  echo "  Ready for integration: $MERGED"
   echo "  Waiting for merge: $WAITING"
   if [ $NO_PR -gt 0 ]; then
     echo "  Needs PR: $NO_PR"
@@ -147,7 +147,7 @@ echo "$BEADS" | jq -r '.[].id' | {
   echo ""
 
   if [ $MERGED -gt 0 ]; then
-    echo "  Run: /dots-swe:cleanup           # Clean up all merged work"
-    echo "  Run: /dots-swe:cleanup <bead>    # Clean up specific bead"
+    echo "  Run: /dots-swe:code-integrate           # Integrate all merged work"
+    echo "  Run: /dots-swe:code-integrate <bead>    # Integrate specific bead"
   fi
 }

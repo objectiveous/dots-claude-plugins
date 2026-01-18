@@ -1,5 +1,5 @@
 #!/bin/bash
-# Batch cleanup of merged swe:done work
+# Batch integration of merged swe:done work
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/swe-lib.sh"
@@ -22,9 +22,9 @@ done
 
 # Help flag
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  echo "Usage: /dots-swe:cleanup [options] [bead-id...]"
+  echo "Usage: /dots-swe:code-integrate [options] [bead-id...]"
   echo ""
-  echo "Batch cleanup of merged swe:done work."
+  echo "Batch integration of merged swe:done work."
   echo ""
   echo "Options:"
   echo "  --dry-run, -n    Show what would happen without doing it"
@@ -44,14 +44,13 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  6. Remove swe:done label"
   echo ""
   echo "Examples:"
-  echo "  /dots-swe:cleanup                    # Clean all merged work"
-  echo "  /dots-swe:cleanup dots-abc           # Clean specific bead"
-  echo "  /dots-swe:cleanup --dry-run          # Preview what would happen"
-  echo "  /dots-swe:cleanup --no-remote        # Keep remote branches"
+  echo "  /dots-swe:code-integrate                    # Integrate all merged work"
+  echo "  /dots-swe:code-integrate dots-abc           # Integrate specific bead"
+  echo "  /dots-swe:code-integrate --dry-run          # Preview what would happen"
+  echo "  /dots-swe:code-integrate --no-remote        # Keep remote branches"
   echo ""
   echo "See also:"
-  echo "  /dots-swe:cleanup-status    # Show what's ready for cleanup"
-  echo "  /dots-swe:finish <bead>     # Single bead cleanup"
+  echo "  /dots-swe:code-integrate-status    # Show what's ready for integration"
   exit 0
 fi
 
@@ -59,7 +58,7 @@ WORKTREES_DIR=$(get_worktrees_dir)
 TERMINAL=$(get_swe_terminal)
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    Batch Cleanup                             ║"
+echo "║                    Batch Integration                             ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -84,7 +83,7 @@ else
 fi
 
 # Filter for merged beads (unless --force)
-TO_CLEANUP=()
+TO_INTEGRATION=()
 SKIPPED=()
 
 for BEAD_ID in "${BEAD_IDS[@]}"; do
@@ -92,13 +91,13 @@ for BEAD_ID in "${BEAD_IDS[@]}"; do
   MERGE_STATUS=$(is_branch_merged "$BEAD_ID")
 
   if [ "$FORCE" = true ] || [ "$MERGE_STATUS" != "no" ]; then
-    TO_CLEANUP+=("$BEAD_ID")
+    TO_INTEGRATION+=("$BEAD_ID")
   else
     SKIPPED+=("$BEAD_ID")
   fi
 done
 
-if [ ${#TO_CLEANUP[@]} -eq 0 ]; then
+if [ ${#TO_INTEGRATION[@]} -eq 0 ]; then
   echo "ℹ️  No merged beads to clean up."
   echo ""
   if [ ${#SKIPPED[@]} -gt 0 ]; then
@@ -114,13 +113,13 @@ fi
 
 # Show what will be cleaned
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Will clean up ${#TO_CLEANUP[@]} bead(s):"
+echo "Will clean up ${#TO_INTEGRATION[@]} bead(s):"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-for BEAD_ID in "${TO_CLEANUP[@]}"; do
+for BEAD_ID in "${TO_INTEGRATION[@]}"; do
   MERGE_STATUS=$(is_branch_merged "$BEAD_ID")
-  RESOURCES=$(get_cleanup_resources "$BEAD_ID")
+  RESOURCES=$(get_integration_resources "$BEAD_ID")
 
   STATUS_LABEL="MERGED"
   [ "$MERGE_STATUS" = "local" ] && STATUS_LABEL="MERGED (local)"
@@ -159,8 +158,8 @@ if [ "$DRY_RUN" = true ]; then
 fi
 
 # Confirm before proceeding
-if [ ${#TO_CLEANUP[@]} -gt 1 ]; then
-  echo "⚠️  About to clean up ${#TO_CLEANUP[@]} beads. This will:"
+if [ ${#TO_INTEGRATION[@]} -gt 1 ]; then
+  echo "⚠️  About to clean up ${#TO_INTEGRATION[@]} beads. This will:"
   echo "   • Delete worktrees, branches, and sessions"
   echo "   • Close beads"
   [ "$NO_REMOTE" = false ] && echo "   • Delete remote branches"
@@ -168,19 +167,19 @@ if [ ${#TO_CLEANUP[@]} -gt 1 ]; then
 fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🧹 Starting cleanup..."
+echo "🧹 Starting integration..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 CLEANED_COUNT=0
 ERROR_COUNT=0
 
-for BEAD_ID in "${TO_CLEANUP[@]}"; do
+for BEAD_ID in "${TO_INTEGRATION[@]}"; do
   echo "🔄 Cleaning up: $BEAD_ID"
 
   WORKTREE_PATH="$WORKTREES_DIR/$BEAD_ID"
   BRANCH="$BEAD_ID"
-  CLEANUP_ERROR=false
+  INTEGRATION_ERROR=false
 
   # 1. Kill session
   if [ "$TERMINAL" = "ghostty" ]; then
@@ -200,7 +199,7 @@ for BEAD_ID in "${TO_CLEANUP[@]}"; do
     echo "   Removing worktree..."
     git worktree remove "$WORKTREE_PATH" --force 2>/dev/null || {
       echo "   Warning: Could not remove worktree"
-      CLEANUP_ERROR=true
+      INTEGRATION_ERROR=true
     }
   fi
 
@@ -209,7 +208,7 @@ for BEAD_ID in "${TO_CLEANUP[@]}"; do
     echo "   Deleting local branch..."
     git branch -D "$BRANCH" 2>/dev/null || {
       echo "   Warning: Could not delete local branch"
-      CLEANUP_ERROR=true
+      INTEGRATION_ERROR=true
     }
   fi
 
@@ -219,7 +218,7 @@ for BEAD_ID in "${TO_CLEANUP[@]}"; do
       echo "   Deleting remote branch..."
       git push origin --delete "$BRANCH" 2>/dev/null || {
         echo "   Warning: Could not delete remote branch"
-        CLEANUP_ERROR=true
+        INTEGRATION_ERROR=true
       }
     fi
   fi
@@ -228,7 +227,7 @@ for BEAD_ID in "${TO_CLEANUP[@]}"; do
   echo "   Closing bead..."
   bd close "$BEAD_ID" 2>/dev/null || {
     echo "   Warning: Could not close bead"
-    CLEANUP_ERROR=true
+    INTEGRATION_ERROR=true
   }
 
   # 6. Remove label
@@ -239,11 +238,11 @@ for BEAD_ID in "${TO_CLEANUP[@]}"; do
     unregister_worktree "$WORKTREE_PATH" 2>/dev/null
   fi
 
-  if [ "$CLEANUP_ERROR" = true ]; then
+  if [ "$INTEGRATION_ERROR" = true ]; then
     echo "   ⚠️  Completed with warnings"
     ERROR_COUNT=$((ERROR_COUNT + 1))
   else
-    echo "   ✅ Cleanup complete"
+    echo "   ✅ Integration complete"
     CLEANED_COUNT=$((CLEANED_COUNT + 1))
   fi
 
@@ -255,7 +254,7 @@ echo "Syncing beads..."
 bd sync 2>/dev/null
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📊 Cleanup Summary"
+echo "📊 Integration Summary"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "  Cleaned: $CLEANED_COUNT"
@@ -268,5 +267,5 @@ fi
 echo ""
 
 if [ $CLEANED_COUNT -gt 0 ]; then
-  echo "✅ Cleanup complete!"
+  echo "✅ Integration complete!"
 fi

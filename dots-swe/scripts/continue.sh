@@ -28,8 +28,8 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  /dots-swe:continue dots-abc     # Continue work on dots-abc"
   echo ""
   echo "See also:"
-  echo "  /dots-swe:dispatch <bead-id>   # Start new work"
-  echo "  /dots-swe:finish <bead-id>  # Finish and cleanup"
+  echo "  /dots-swe:dispatch <bead-id>       # Start new work"
+  echo "  /dots-swe:code-integrate <bead-id> # Integrate after merge"
   exit 0
 fi
 

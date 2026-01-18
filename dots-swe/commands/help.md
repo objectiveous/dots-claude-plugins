@@ -19,9 +19,8 @@ Software engineering tools for Claude Code - work management, beads integration,
 | `/dots-swe:dispatch <bead-id>` | Start work on a bead (creates workspace, opens Claude) |
 | `/dots-swe:continue [bead-id]` | Continue work (reattach to existing session) |
 | `/dots-swe:reconnect` | Reconnect to stranded worktrees (without active sessions) |
-| `/dots-swe:cleanup-status` | Show swe:done beads ready for cleanup |
-| `/dots-swe:cleanup [bead-id...]` | Batch cleanup of merged swe:done work |
-| `/dots-swe:finish [bead-id]` | Finish single bead (verify PR merged, cleanup) |
+| `/dots-swe:code-integrate-status` | Show swe:done beads ready for integration |
+| `/dots-swe:code-integrate [bead-id...]` | Integrate code after merge - clean up resources |
 
 ### Quality & Shipping
 
@@ -64,11 +63,11 @@ Software engineering tools for Claude Code - work management, beads integration,
 │       ↓                                                     │
 │  ... PR reviewed and merged ...                             │
 │       ↓                                                     │
-│  /dots-swe:cleanup-status    # See what's ready for cleanup │
+│  /dots-swe:code-integrate-status  # See integration status  │
 │       ↓                                                     │
-│  /dots-swe:cleanup           # Batch cleanup all merged     │
+│  /dots-swe:code-integrate         # Integrate all merged    │
 │  OR                                                         │
-│  /dots-swe:finish dots-abc   # Single bead cleanup          │
+│  /dots-swe:code-integrate <id>    # Integrate specific bead │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -104,5 +103,5 @@ In each workspace:
 ```bash
 /dots-swe:dispatch --help
 /dots-swe:code-complete --help
-/dots-swe:finish --help
+/dots-swe:code-integrate --help
 ```

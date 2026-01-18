@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(bash:*)
-description: Batch cleanup of merged swe:done work
+description: Integrate code after merge - clean up resources
 execution-mode: atomic-bash
 ---
 
@@ -10,11 +10,11 @@ execution-mode: atomic-bash
 3. Wait for the skill execution output and report the result to the user
 </claude-instructions>
 
-# Batch Cleanup
+# Code Integration
 
-Clean up merged `swe:done` labeled beads - closes bead, kills session, deletes worktree and branches.
+Integrate merged `swe:done` labeled beads - closes bead, kills session, deletes worktree and branches.
 
-**Usage:** `/dots-swe:cleanup [options] [bead-id...]`
+**Usage:** `/dots-swe:code-integrate [options] [bead-id...]`
 
 **Options:**
 - `--dry-run, -n` - Show what would happen without doing it
@@ -36,12 +36,12 @@ Clean up merged `swe:done` labeled beads - closes bead, kills session, deletes w
 
 **Examples:**
 ```bash
-/dots-swe:cleanup                    # Clean all merged work
-/dots-swe:cleanup dots-abc           # Clean specific bead
-/dots-swe:cleanup --dry-run          # Preview what would happen
-/dots-swe:cleanup --no-remote        # Keep remote branches
+/dots-swe:code-integrate                    # Integrate all merged work
+/dots-swe:code-integrate dots-abc           # Integrate specific bead
+/dots-swe:code-integrate --dry-run          # Preview what would happen
+/dots-swe:code-integrate --no-remote        # Keep remote branches
 ```
 
 ## Implementation
 
-!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/cleanup.sh 2>/dev/null | head -1)" "$@"
+!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/code-integrate.sh 2>/dev/null | head -1)" "$@"

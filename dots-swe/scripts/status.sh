@@ -212,7 +212,7 @@ if [ -d "$WORKTREES_DIR" ]; then
 
   if [ -n "$UNFINISHED_WORKTREES" ]; then
     echo ""
-    echo "  Use: /dots-swe:finish <bead-id>"
+    echo "  Use: /dots-swe:code-integrate <bead-id>"
     echo ""
   fi
 fi
@@ -264,6 +264,6 @@ echo ""
 echo "Start work:     /dots-swe:dispatch <bead-id>"
 echo "Continue work:  /dots-swe:continue <bead-id>"
 echo "Code complete:  /dots-swe:code-complete"
-echo "Finish work:    /dots-swe:finish <bead-id>"
+echo "Integrate code: /dots-swe:code-integrate <bead-id>"
 echo "Health check:   /dots-swe:doctor"
 echo ""
