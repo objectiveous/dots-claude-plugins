@@ -18,7 +18,13 @@ Displays a comprehensive dashboard of current work status including active epics
 
 **Shows:**
 - **Active Epic** - Current epic(s) in progress
-- **In-Flight Work** - Tasks currently being worked on (status: in_progress)
+- **Git Worktrees** - All active worktrees with detailed status:
+  - Branch name and associated bead
+  - Uncommitted changes count
+  - Unpushed commits (ahead of origin)
+  - Behind origin status
+  - Overall sync state
+- **In-Flight Work** - Beads currently being worked on (status: in_progress)
 - **Ready to Work** - Unblocked tasks available to start
 - **Ready to Merge** - Completed work needing to be finished or merged
 - **Blocked Work** - Tasks waiting on dependencies

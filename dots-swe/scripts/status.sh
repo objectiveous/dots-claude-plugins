@@ -57,46 +57,103 @@ fi
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════
-# In-Flight Work
+# Git Worktrees
 # ═══════════════════════════════════════════════════════════════════
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🚀 In-Flight Work"
+echo "🌳 Git Worktrees"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+REPO_ROOT=$(get_repo_root)
+WORKTREE_COUNT=0
+WORKTREE_ISSUES=0
+
+# Parse git worktree list
+while IFS= read -r line; do
+  case "$line" in
+    worktree*)
+      WORKTREE_PATH="${line#worktree }"
+      # Skip main worktree
+      if [ "$WORKTREE_PATH" != "$REPO_ROOT" ]; then
+        BRANCH=$(git -C "$WORKTREE_PATH" branch --show-current 2>/dev/null || echo "detached")
+        BEAD_ID=$(basename "$WORKTREE_PATH")
+
+        # Get bead status if exists
+        BEAD_STATUS=$(bd show "$BEAD_ID" 2>/dev/null | grep "Status:" | awk '{print $2}' || echo "n/a")
+
+        # Check for uncommitted changes
+        CHANGES=$(git -C "$WORKTREE_PATH" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+
+        # Check for unpushed commits
+        git -C "$WORKTREE_PATH" fetch origin "$BRANCH" --quiet 2>/dev/null || true
+        AHEAD=$(git -C "$WORKTREE_PATH" rev-list --count origin/$BRANCH..HEAD 2>/dev/null || echo "0")
+        BEHIND=$(git -C "$WORKTREE_PATH" rev-list --count HEAD..origin/$BRANCH 2>/dev/null || echo "0")
+
+        # Build status line
+        STATUS_LINE="$BEAD_ID ($BRANCH)"
+
+        # Add bead status
+        if [ "$BEAD_STATUS" != "n/a" ]; then
+          STATUS_LINE="$STATUS_LINE [bead: $BEAD_STATUS]"
+        fi
+
+        # Add git status
+        DETAILS=""
+        if [ "$CHANGES" -gt 0 ]; then
+          DETAILS="$CHANGES uncommitted"
+          WORKTREE_ISSUES=$((WORKTREE_ISSUES + 1))
+        fi
+
+        if [ "$AHEAD" -gt 0 ]; then
+          [ -n "$DETAILS" ] && DETAILS="$DETAILS, "
+          DETAILS="${DETAILS}↑$AHEAD unpushed"
+          WORKTREE_ISSUES=$((WORKTREE_ISSUES + 1))
+        fi
+
+        if [ "$BEHIND" -gt 0 ]; then
+          [ -n "$DETAILS" ] && DETAILS="$DETAILS, "
+          DETAILS="${DETAILS}↓$BEHIND behind origin"
+          WORKTREE_ISSUES=$((WORKTREE_ISSUES + 1))
+        fi
+
+        if [ -z "$DETAILS" ]; then
+          DETAILS="✓ clean, synced"
+        fi
+
+        echo "  $STATUS_LINE"
+        echo "    $DETAILS"
+
+        WORKTREE_COUNT=$((WORKTREE_COUNT + 1))
+      fi
+      ;;
+  esac
+done < <(git worktree list --porcelain 2>/dev/null)
+
+if [ "$WORKTREE_COUNT" -eq 0 ]; then
+  echo "  No active worktrees"
+else
+  echo ""
+  if [ "$WORKTREE_ISSUES" -gt 0 ]; then
+    echo "  ⚠️  $WORKTREE_ISSUES worktree(s) need attention"
+  else
+    echo "  ✅ All worktrees clean and synced"
+  fi
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════
+# In-Flight Work (Beads)
+# ═══════════════════════════════════════════════════════════════════
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🚀 In-Flight Work (Beads)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 IN_PROGRESS=$(bd list --status=in_progress 2>/dev/null | grep -v "^$")
 if [ -n "$IN_PROGRESS" ]; then
   echo "$IN_PROGRESS"
-
-  # Show which ones have active worktrees
-  echo ""
-  echo "Active worktrees:"
-  WORKTREES_DIR=$(get_worktrees_dir)
-  if [ -d "$WORKTREES_DIR" ]; then
-    WORKTREE_COUNT=0
-    for worktree in "$WORKTREES_DIR"/*; do
-      if [ -d "$worktree" ]; then
-        BEAD_ID=$(basename "$worktree")
-        BRANCH=$(cd "$worktree" && git branch --show-current 2>/dev/null || echo "unknown")
-        CHANGES=$(cd "$worktree" && git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-
-        if [ "$CHANGES" -gt 0 ]; then
-          echo "  $BEAD_ID ($BRANCH) - $CHANGES uncommitted changes"
-        else
-          echo "  $BEAD_ID ($BRANCH) - clean"
-        fi
-        WORKTREE_COUNT=$((WORKTREE_COUNT + 1))
-      fi
-    done
-
-    if [ "$WORKTREE_COUNT" -eq 0 ]; then
-      echo "  (no worktrees found)"
-    fi
-  else
-    echo "  (no worktrees directory)"
-  fi
 else
-  echo "  No work currently in progress"
+  echo "  No beads currently in progress"
 fi
 echo ""
 
