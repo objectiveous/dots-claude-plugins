@@ -12,9 +12,13 @@ execution-mode: atomic-bash
 
 # Code Integration
 
-Integrate `swe:code-complete` work into main and clean up resources. Automatically detects GitHub PR workflow vs local merge workflow, performs the integration, then cleans up worktrees, sessions, and branches.
+Integrate `swe:code-complete` work into main and clean up resources. Choose between local merge or GitHub PR workflow explicitly.
 
 **Usage:** `/dots-swe:code-integrate [options] [bead-id...]`
+
+**Required Merge Mode (choose one):**
+- `--local` - Merge branch directly to main (no PR)
+- `--remote` - Create/use GitHub PR for merge
 
 **Options:**
 - `--dry-run, -n` - Show what would happen without doing it
@@ -25,12 +29,12 @@ Integrate `swe:code-complete` work into main and clean up resources. Automatical
 - Without bead IDs: processes ALL swe:code-complete beads
 - With bead IDs: processes only specified beads
 
-**Workflow Detection:**
-- **GitHub mode:** Creates/finds PR for unmerged work, waits for manual merge
-- **Local mode:** Merges branch directly to main
+**Merge Modes:**
+- **--local mode:** Merges branch directly to main, pushes to origin
+- **--remote mode:** Creates/finds PR, waits for manual merge if open
 
 **For each bead:**
-1. Merge to main if not already merged (auto-detects GitHub/local)
+1. Merge to main if not already merged (per merge mode)
 2. Kill zmx/tmux session
 3. Delete worktree
 4. Delete local branch
@@ -40,10 +44,10 @@ Integrate `swe:code-complete` work into main and clean up resources. Automatical
 
 **Examples:**
 ```bash
-/dots-swe:code-integrate                    # Integrate all code-complete work
-/dots-swe:code-integrate dots-abc           # Integrate specific bead
-/dots-swe:code-integrate --dry-run          # Preview what would happen
-/dots-swe:code-integrate --no-remote        # Keep remote branches
+/dots-swe:code-integrate --remote                  # PR workflow for all
+/dots-swe:code-integrate --local dots-abc          # Local merge for one
+/dots-swe:code-integrate --remote --dry-run        # Preview PR workflow
+/dots-swe:code-integrate --local --no-remote       # Local merge, keep remote
 ```
 
 ## Implementation

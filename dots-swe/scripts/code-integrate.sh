@@ -8,23 +8,18 @@ source "$SCRIPT_DIR/swe-lib.sh"
 DRY_RUN=false
 FORCE=false
 NO_REMOTE=false
+MERGE_MODE=""
 BEAD_IDS=()
 
-for arg in "$@"; do
-  case "$arg" in
-    --dry-run|-n) DRY_RUN=true ;;
-    --force|-f) FORCE=true ;;
-    --no-remote) NO_REMOTE=true ;;
-    --help|-h) ;; # handled below
-    *) BEAD_IDS+=("$arg") ;;
-  esac
-done
-
-# Help flag
+# Help flag (check first before validation)
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "Usage: /dots-swe:code-integrate [options] [bead-id...]"
   echo ""
   echo "Integrate swe:code-complete work into main and clean up resources."
+  echo ""
+  echo "Required Merge Mode (choose one):"
+  echo "  --local          Merge branch directly to main (no PR)"
+  echo "  --remote         Create/use GitHub PR for merge"
   echo ""
   echo "Options:"
   echo "  --dry-run, -n    Show what would happen without doing it"
@@ -35,12 +30,21 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  Without bead IDs: processes ALL swe:code-complete beads"
   echo "  With bead IDs: processes only specified beads"
   echo ""
-  echo "Workflow Detection:"
-  echo "  • GitHub mode: Creates/finds PR for unmerged work, waits for manual merge"
-  echo "  • Local mode: Merges branch directly to main"
+  echo "Merge Modes:"
+  echo "  --local mode:"
+  echo "    • Switches to main, pulls latest"
+  echo "    • Merges branch with --no-ff"
+  echo "    • Pushes to origin"
+  echo "    • Proceeds to cleanup"
+  echo ""
+  echo "  --remote mode:"
+  echo "    • Creates PR if needed (or finds existing)"
+  echo "    • Shows PR URL and state"
+  echo "    • If PR is open: skips with message to merge manually"
+  echo "    • If PR is merged: proceeds to cleanup"
   echo ""
   echo "For each bead:"
-  echo "  1. Merge to main if not already merged (auto-detects GitHub/local)"
+  echo "  1. Merge to main if not already merged (per merge mode)"
   echo "  2. Kill zmx/tmux session"
   echo "  3. Delete worktree"
   echo "  4. Delete local branch"
@@ -49,25 +53,47 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  7. Remove swe:code-complete label"
   echo ""
   echo "Examples:"
-  echo "  /dots-swe:code-integrate                    # Integrate all code-complete work"
-  echo "  /dots-swe:code-integrate dots-abc           # Integrate specific bead"
-  echo "  /dots-swe:code-integrate --dry-run          # Preview what would happen"
-  echo "  /dots-swe:code-integrate --no-remote        # Keep remote branches"
+  echo "  /dots-swe:code-integrate --remote                  # PR workflow for all"
+  echo "  /dots-swe:code-integrate --local dots-abc          # Local merge for one"
+  echo "  /dots-swe:code-integrate --remote --dry-run        # Preview PR workflow"
+  echo "  /dots-swe:code-integrate --local --no-remote       # Local merge, keep remote branch"
   echo ""
   echo "See also:"
   echo "  /dots-swe:code-integrate-status    # Show what's ready for integration"
   exit 0
 fi
 
+# Parse flags
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|-n) DRY_RUN=true ;;
+    --force|-f) FORCE=true ;;
+    --no-remote) NO_REMOTE=true ;;
+    --local) MERGE_MODE="local" ;;
+    --remote) MERGE_MODE="remote" ;;
+    *) BEAD_IDS+=("$arg") ;;
+  esac
+done
+
+# Validate merge mode
+if [ -z "$MERGE_MODE" ]; then
+  echo "ERROR: Must specify merge mode: --local or --remote"
+  echo ""
+  echo "  --local   Merge branch directly to main (no PR)"
+  echo "  --remote  Create/use GitHub PR for merge"
+  echo ""
+  echo "Run with --help for full usage."
+  exit 1
+fi
+
 WORKTREES_DIR=$(get_worktrees_dir)
 TERMINAL=$(get_swe_terminal)
-WORKFLOW_MODE=$(detect_workflow_mode)
 
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║                    Code Integration                          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
-echo "Workflow mode: $WORKFLOW_MODE"
+echo "Merge mode: $MERGE_MODE"
 echo ""
 
 # Get beads to process
@@ -103,10 +129,10 @@ for BEAD_ID in "${BEAD_IDS[@]}"; do
     # Already merged or forced
     TO_INTEGRATION+=("$BEAD_ID")
   else
-    # Not merged yet - try to merge based on workflow mode
+    # Not merged yet - try to merge based on merge mode
     echo "🔄 $BEAD_ID is not merged yet. Attempting integration..."
 
-    if [ "$WORKFLOW_MODE" = "github" ]; then
+    if [ "$MERGE_MODE" = "remote" ]; then
       # GitHub PR workflow
       PR_NUMBER=$(create_or_find_pr "$BEAD_ID" "main" 2>&1)
       if [ -n "$PR_NUMBER" ] && [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
