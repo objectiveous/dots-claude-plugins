@@ -36,10 +36,11 @@ Software engineering tools for Claude Code - work management, beads integration,
 |---------|-------------|
 | `/dots-swe:beads` | Show available work and beads reference |
 
-### Git Hooks
+### Git Tools
 
 | Command | Description |
 |---------|-------------|
+| `/dots-swe:squash` | Interactive rebase to squash commits |
 | `/dots-swe:install-commit-hook` | Install Conventional Commits validator |
 | `/dots-swe:uninstall-commit-hook` | Remove Conventional Commits validator |
 
@@ -59,7 +60,7 @@ Software engineering tools for Claude Code - work management, beads integration,
 │       ↓                                                     │
 │  ... work in new Claude session ...                         │
 │       ↓                                                     │
-│  git rebase -i main                  # Squash commits       │
+│  /dots-swe:squash                    # Squash commits       │
 │       ↓                                                     │
 │  /dots-swe:code-complete             # Mark code complete   │
 │       ↓                                                     │
@@ -73,7 +74,7 @@ Software engineering tools for Claude Code - work management, beads integration,
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Before code-complete:** Squash commits into logical units using `git rebase -i main`
+**Before code-complete:** Squash commits into logical units using `/dots-swe:squash`
 
 **If you need to step away:**
 ```bash
