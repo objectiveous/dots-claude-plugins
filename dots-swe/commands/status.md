@@ -5,10 +5,13 @@ execution-mode: atomic-bash
 ---
 
 <claude-instructions>
-1. The bash script below will execute AUTOMATICALLY by the skill framework
-2. DO NOT manually run individual bash commands from this skill
-3. Wait for the skill execution output and display it EXACTLY as-is to the user
-4. DO NOT summarize or interpret the output - show the complete status report
+After calling the Skill tool:
+1. Check the tool result immediately - it may contain execution output or status information
+2. If the bash script executed, display the complete output EXACTLY as-is to the user
+3. If you see a task_id or background process reference, use TaskOutput to check its status
+4. DO NOT wait passively - actively check results and report to the user
+5. DO NOT manually run individual bash commands from this skill definition
+6. DO NOT summarize or interpret the output - show the complete status report
 </claude-instructions>
 
 # SWE Status Dashboard

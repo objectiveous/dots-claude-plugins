@@ -7,11 +7,13 @@ execution-mode: atomic-bash
 <claude-instructions>
 CRITICAL: This skill spawns a NEW session in a workspace. DO NOT work in the current directory.
 
-1. The bash script below will execute AUTOMATICALLY by the skill framework
-2. DO NOT manually run individual bash commands from this skill
-3. Wait for the skill execution output
-4. Report the result to the user and STOP - work happens in the NEW session
-5. NEVER continue working in the current directory after this skill runs
+After calling the Skill tool:
+1. Check the tool result immediately - it may contain execution output or status information
+2. If the bash script executed, report the complete output to the user and STOP
+3. If you see a task_id or background process reference, use TaskOutput to check its status
+4. DO NOT wait passively - actively check results and report to the user
+5. DO NOT manually run individual bash commands from this skill definition
+6. NEVER continue working in the current directory after this skill runs - work happens in the NEW session
 </claude-instructions>
 
 # Dispatch Work
