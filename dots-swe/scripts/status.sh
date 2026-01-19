@@ -35,6 +35,70 @@ if [ -n "$CURRENT_BEAD" ]; then
 fi
 
 # ═══════════════════════════════════════════════════════════════════
+# Ready to Integrate
+# ═══════════════════════════════════════════════════════════════════
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🎁 Ready to Integrate"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Check for issues marked with swe:code-complete label
+SWE_DONE=$(bd list --label swe:code-complete 2>/dev/null | grep -v "^$")
+if [ -n "$SWE_DONE" ]; then
+  echo "Code complete (swe:code-complete label):"
+  echo "$SWE_DONE"
+  echo ""
+
+  # Extract bead IDs and create copy-paste command
+  BEAD_IDS=$(echo "$SWE_DONE" | grep -o '[a-z-]*-[a-z0-9]*' | head -n 1)
+  if [ -n "$BEAD_IDS" ]; then
+    # Get all bead IDs from the output
+    ALL_BEAD_IDS=$(echo "$SWE_DONE" | grep -o '^[a-z][a-z-]*-[a-z0-9]*' | tr '\n' ' ' | sed 's/ $//')
+    if [ -n "$ALL_BEAD_IDS" ]; then
+      echo "  Copy-paste to integrate all:"
+      echo "  /dots-swe:code-integrate --local $ALL_BEAD_IDS"
+      echo ""
+    fi
+  fi
+
+  echo "  Run: /dots-swe:code-integrate-status for details"
+  echo ""
+fi
+
+# Check for worktrees that might need finishing (exist but not in_progress)
+# This catches work that's been completed but not properly closed
+WORKTREES_DIR=$(get_worktrees_dir)
+if [ -d "$WORKTREES_DIR" ]; then
+  UNFINISHED_WORKTREES=""
+  for worktree in "$WORKTREES_DIR"/*; do
+    if [ -d "$worktree" ]; then
+      BEAD_ID=$(basename "$worktree")
+      # Check if this bead is in_progress
+      BEAD_STATUS=$(bd show "$BEAD_ID" 2>/dev/null | grep "Status:" | awk '{print $2}')
+
+      if [ "$BEAD_STATUS" != "in_progress" ] && [ "$BEAD_STATUS" != "open" ]; then
+        if [ -z "$UNFINISHED_WORKTREES" ]; then
+          echo "Worktrees that may need finishing:"
+        fi
+        echo "  $BEAD_ID (status: ${BEAD_STATUS:-unknown})"
+        UNFINISHED_WORKTREES="found"
+      fi
+    fi
+  done
+
+  if [ -n "$UNFINISHED_WORKTREES" ]; then
+    echo ""
+    echo "  Use: /dots-swe:code-integrate <bead-id>"
+    echo ""
+  fi
+fi
+
+if [ -z "$SWE_DONE" ] && [ -z "$UNFINISHED_WORKTREES" ]; then
+  echo "  No work ready to integrate"
+  echo ""
+fi
+
+# ═══════════════════════════════════════════════════════════════════
 # Active Epic
 # ═══════════════════════════════════════════════════════════════════
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -172,57 +236,6 @@ else
   echo "  No ready work available"
 fi
 echo ""
-
-# ═══════════════════════════════════════════════════════════════════
-# Ready to Merge
-# ═══════════════════════════════════════════════════════════════════
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🎁 Ready to Integrate"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-
-# Check for issues marked with swe:code-complete label
-SWE_DONE=$(bd list --label swe:code-complete 2>/dev/null | grep -v "^$")
-if [ -n "$SWE_DONE" ]; then
-  echo "Code complete (swe:code-complete label):"
-  echo "$SWE_DONE"
-  echo ""
-  echo "  Run: /dots-swe:code-integrate-status for details"
-  echo ""
-fi
-
-# Check for worktrees that might need finishing (exist but not in_progress)
-# This catches work that's been completed but not properly closed
-WORKTREES_DIR=$(get_worktrees_dir)
-if [ -d "$WORKTREES_DIR" ]; then
-  UNFINISHED_WORKTREES=""
-  for worktree in "$WORKTREES_DIR"/*; do
-    if [ -d "$worktree" ]; then
-      BEAD_ID=$(basename "$worktree")
-      # Check if this bead is in_progress
-      BEAD_STATUS=$(bd show "$BEAD_ID" 2>/dev/null | grep "Status:" | awk '{print $2}')
-
-      if [ "$BEAD_STATUS" != "in_progress" ] && [ "$BEAD_STATUS" != "open" ]; then
-        if [ -z "$UNFINISHED_WORKTREES" ]; then
-          echo "Worktrees that may need finishing:"
-        fi
-        echo "  $BEAD_ID (status: ${BEAD_STATUS:-unknown})"
-        UNFINISHED_WORKTREES="found"
-      fi
-    fi
-  done
-
-  if [ -n "$UNFINISHED_WORKTREES" ]; then
-    echo ""
-    echo "  Use: /dots-swe:code-integrate <bead-id>"
-    echo ""
-  fi
-fi
-
-if [ -z "$READY_TO_MERGE" ] && [ -z "$UNFINISHED_WORKTREES" ]; then
-  echo "  No work ready to merge or finish"
-  echo ""
-fi
 
 # ═══════════════════════════════════════════════════════════════════
 # Blocked Work
