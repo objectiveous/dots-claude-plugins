@@ -222,6 +222,48 @@ kill_zmx_session() {
   fi
 }
 
+# Close Ghostty tab by session name/title
+# Uses AppleScript to find and close the tab with the matching title
+# Returns: 0 if successful or permissions missing, 1 if failed
+close_ghostty_tab() {
+  local session_name="$1"
+
+  # Skip if no AppleScript permissions (fail silently)
+  if ! check_applescript_permissions "Ghostty"; then
+    return 0
+  fi
+
+  # Try to close window/tab with matching title
+  local error_output
+  error_output=$(osascript 2>&1 <<EOF
+tell application "System Events"
+    tell process "Ghostty"
+        set foundWindow to false
+        repeat with w in (every window)
+            try
+                set windowTitle to name of w
+                if windowTitle is "$session_name" or windowTitle contains "$session_name" then
+                    -- Click close button (button 1 is typically the close button)
+                    click button 1 of w
+                    set foundWindow to true
+                    exit repeat
+                end if
+            end try
+        end repeat
+    end tell
+end tell
+EOF
+)
+
+  local exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+    # Silently fail - tab might already be closed or not found
+    return 1
+  fi
+
+  return 0
+}
+
 # Open new Ghostty window with zmx session
 open_ghostty_zmx_window() {
   local worktree_path="$1"
@@ -852,6 +894,8 @@ delete_worktrees() {
 
     # Kill zmx session if exists
     if [ -n "$zmx_session" ]; then
+      echo "  Closing Ghostty tab..."
+      close_ghostty_tab "$zmx_session" 2>/dev/null
       echo "  Killing zmx session..."
       kill_zmx_session "$zmx_session"
     fi

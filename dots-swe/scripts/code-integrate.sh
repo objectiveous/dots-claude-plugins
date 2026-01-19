@@ -46,7 +46,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "    • If PR is merged: proceeds to cleanup"
   echo ""
   echo "For each successfully merged bead:"
-  echo "  1. Kill zmx/tmux session"
+  echo "  1. Close tab and kill zmx/tmux session"
   echo "  2. Delete worktree"
   echo "  3. Delete local branch"
   echo "  4. Delete remote branch (unless --no-remote)"
@@ -284,7 +284,7 @@ echo ""
 if [ "$DRY_RUN" = true ]; then
   echo "📋 DRY RUN: Here's what would happen for each bead"
   echo ""
-  echo "  1. Kill session (zmx/tmux)"
+  echo "  1. Close tab and kill session (zmx/tmux)"
   echo "  2. Remove worktree"
   echo "  3. Delete local branch"
   [ "$NO_REMOTE" = false ] && echo "  4. Delete remote branch"
@@ -324,6 +324,8 @@ for BEAD_ID in "${TO_INTEGRATION[@]}"; do
   # 1. Kill session
   if [ "$TERMINAL" = "ghostty" ]; then
     if zmx_session_exists "$BEAD_ID"; then
+      echo "   Closing Ghostty tab..."
+      close_ghostty_tab "$BEAD_ID" 2>/dev/null
       echo "   Killing zmx session..."
       kill_zmx_session "$BEAD_ID" 2>/dev/null || echo "   Warning: Could not kill session"
     fi
