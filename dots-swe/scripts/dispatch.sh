@@ -7,7 +7,7 @@ source "$SCRIPT_DIR/swe-lib.sh"
 
 # Parse flags
 DRY_RUN=false
-BEAD_ID=""
+BEAD_IDS=()
 MODEL=""
 i=0
 while [ $i -lt $# ]; do
@@ -22,7 +22,7 @@ while [ $i -lt $# ]; do
       eval "MODEL=\${$i}"
       ;;
     --help|-h) ;; # handled below
-    *) BEAD_ID="$arg" ;;
+    *) BEAD_IDS+=("$arg") ;;
   esac
 done
 
@@ -37,12 +37,12 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   TERMINAL=$(get_swe_terminal)
   CLAUDE_OPTS=$(get_claude_options)
 
-  echo "Usage: /dots-swe:dispatch [options] [bead-id]"
+  echo "Usage: /dots-swe:dispatch [options] [bead-id...]"
   echo ""
-  echo "Start work on a bead by creating a worktree and Claude session."
+  echo "Start work on one or more beads by creating worktrees and Claude sessions."
   echo ""
   echo "Arguments:"
-  echo "  bead-id          Bead to work on (optional if already in a worktree)"
+  echo "  bead-id...       One or more beads to work on (optional if already in a worktree)"
   echo ""
   echo "Options:"
   echo "  --dry-run, -n    Show what would happen without doing it"
@@ -69,11 +69,12 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   fi
   echo ""
   echo "Examples:"
-  echo "  /dots-swe:dispatch dots-abc                    # Start work on specific bead (tab)"
-  echo "  /dots-swe:dispatch --window dots-abc           # Open in new window"
-  echo "  /dots-swe:dispatch --model sonnet dots-abc     # Use sonnet model"
-  echo "  /dots-swe:dispatch                             # Open tab for current worktree"
-  echo "  /dots-swe:dispatch --dry-run dots-abc          # Preview what would happen"
+  echo "  /dots-swe:dispatch dots-abc                           # Start work on specific bead (tab)"
+  echo "  /dots-swe:dispatch dots-abc dots-def dots-xyz         # Dispatch multiple beads"
+  echo "  /dots-swe:dispatch --window dots-abc                  # Open in new window"
+  echo "  /dots-swe:dispatch --model sonnet dots-abc            # Use sonnet model"
+  echo "  /dots-swe:dispatch                                    # Open tab for current worktree"
+  echo "  /dots-swe:dispatch --dry-run dots-abc                 # Preview what would happen"
   echo ""
   echo "See also:"
   echo "  bd ready          # Find available work"
@@ -82,31 +83,44 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
 fi
 
 # Validate arguments - try to detect from .swe-bead if not provided
-if [ -z "$BEAD_ID" ]; then
-  BEAD_ID=$(get_current_bead)
-  if [ -z "$BEAD_ID" ]; then
+if [ ${#BEAD_IDS[@]} -eq 0 ]; then
+  CURRENT_BEAD=$(get_current_bead)
+  if [ -z "$CURRENT_BEAD" ]; then
     echo "ERROR: No bead ID provided and not in a worktree"
     echo ""
-    echo "Usage: /dots-swe:dispatch [--dry-run] <bead-id>"
+    echo "Usage: /dots-swe:dispatch [options] <bead-id...>"
     echo ""
     echo "Available work:"
     bd ready 2>/dev/null || echo "  (bd command not available)"
     exit 1
   fi
-  echo "Detected bead from current worktree: $BEAD_ID"
+  echo "Detected bead from current worktree: $CURRENT_BEAD"
   echo ""
+  BEAD_IDS=("$CURRENT_BEAD")
 fi
 
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                  Starting Work from Bead                     ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-echo ""
-echo "Bead ID: $BEAD_ID"
-echo ""
+# Dispatch each bead
+BEAD_COUNT=0
+for BEAD_ID in "${BEAD_IDS[@]}"; do
+  BEAD_COUNT=$((BEAD_COUNT + 1))
+  if [ ${#BEAD_IDS[@]} -gt 1 ]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Dispatching: $BEAD_ID ($BEAD_COUNT of ${#BEAD_IDS[@]})"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+  fi
 
-# Verify bead exists
-echo "Verifying bead exists..."
-BEAD_INFO=$(bd show "$BEAD_ID" 2>/dev/null)
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║                  Starting Work from Bead                     ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo ""
+  echo "Bead ID: $BEAD_ID"
+  echo ""
+
+  # Verify bead exists
+  echo "Verifying bead exists..."
+  BEAD_INFO=$(bd show "$BEAD_ID" 2>/dev/null)
 if [ -z "$BEAD_INFO" ]; then
   echo "ERROR: Bead '$BEAD_ID' not found"
   echo ""
@@ -299,3 +313,17 @@ fi
 open_worktree_session "$WORKTREE_PATH" "$BEAD_ID" "$MODEL"
 
 echo "✅ Claude session opened in new terminal."
+
+  # Small delay between dispatches to avoid overwhelming the system
+  if [ ${#BEAD_IDS[@]} -gt 1 ]; then
+    sleep 0.5
+  fi
+done
+
+# Summary if multiple beads
+if [ ${#BEAD_IDS[@]} -gt 1 ]; then
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "✅ Dispatched ${#BEAD_IDS[@]} beads successfully"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+fi

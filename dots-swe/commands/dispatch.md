@@ -16,12 +16,12 @@ CRITICAL: This skill spawns a NEW session in a workspace. DO NOT work in the cur
 
 # Dispatch Work
 
-Start work on a bead by creating a workspace and opening a Claude session.
+Start work on one or more beads by creating worktrees and opening Claude sessions.
 
-**Usage:** `/dots-swe:dispatch [options] [bead-id]`
+**Usage:** `/dots-swe:dispatch [options] [bead-id...]`
 
 **Arguments:**
-- `bead-id` - Bead to work on (optional if already in a worktree)
+- `bead-id...` - One or more beads to work on (optional if already in a worktree)
 
 **Options:**
 - `--dry-run, -n` - Show what would happen without doing it
@@ -31,11 +31,12 @@ Start work on a bead by creating a workspace and opening a Claude session.
 
 **Examples:**
 ```bash
-/dots-swe:dispatch dots-abc                    # Open tab for specific bead
-/dots-swe:dispatch --window dots-abc           # Open window instead
-/dots-swe:dispatch --model sonnet dots-abc     # Use sonnet model
-/dots-swe:dispatch                             # Open tab for current worktree
-/dots-swe:dispatch --dry-run dots-abc          # Preview what would happen
+/dots-swe:dispatch dots-abc                           # Open tab for specific bead
+/dots-swe:dispatch dots-abc dots-def dots-xyz         # Dispatch multiple beads
+/dots-swe:dispatch --window dots-abc                  # Open window instead
+/dots-swe:dispatch --model sonnet dots-abc            # Use sonnet model
+/dots-swe:dispatch                                    # Open tab for current worktree
+/dots-swe:dispatch --dry-run dots-abc                 # Preview what would happen
 ```
 
 ## Implementation
