@@ -7,7 +7,8 @@ execution-mode: atomic-bash
 <claude-instructions>
 1. The bash script below will execute AUTOMATICALLY by the skill framework
 2. DO NOT manually run individual bash commands from this skill
-3. Wait for the skill execution output and report the result to the user
+3. Wait for the skill execution output and display it EXACTLY as-is to the user
+4. DO NOT summarize or interpret the output - show the complete status report
 </claude-instructions>
 
 # SWE Status Dashboard
