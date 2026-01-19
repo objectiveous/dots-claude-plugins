@@ -329,6 +329,8 @@ When done, summarize:
 ```
 ## Completed
 
+The work completed for task [BEAD_ID] includes:
+
 **All acceptance criteria met:**
 - [x] AC1: ...
 - [x] AC2: ...
