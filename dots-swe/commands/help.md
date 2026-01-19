@@ -78,6 +78,8 @@ Software engineering tools for Claude Code - work management, beads integration,
 
 **Before code-complete:** Squash commits into logical units using `/dots-swe:squash`
 
+**CRITICAL:** You MUST run `/dots-swe:code-complete` before closing any bead. This is non-negotiable and ensures quality gates pass before integration.
+
 **If you need to step away:**
 ```bash
 # Detach with ctrl+\ (Ghostty) or close window (iTerm)

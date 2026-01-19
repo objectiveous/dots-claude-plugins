@@ -114,6 +114,11 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
    - Mark completed items
    - Show remaining items
 
+4. **Final verification before shipping**
+   - Ensure ALL acceptance criteria are met
+   - Verify git status is clean
+   - Ready to run `/dots-swe:code-complete`
+
 ### Phase 4: Ship
 
 1. **Commit with clear messages**
@@ -150,6 +155,143 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
    - Close the bead with `bd close`
    - Change bead status to `closed`
    - Consider your work "done" until `/dots-swe:code-complete` succeeds
+
+## CRITICAL: Before Closing Any Bead
+
+You MUST run `/dots-swe:code-complete` before closing a bead or saying you're "done". This is NON-NEGOTIABLE.
+
+### What Code-Complete Does
+
+The `/dots-swe:code-complete` command is your final quality gate. It:
+
+1. **Runs all quality gates** (if detected):
+   - Tests: Ensures your changes don't break existing functionality
+   - Lint: Verifies code style and catches common errors
+   - Build: Confirms the project builds successfully
+
+2. **Pushes to remote**: Ensures your code is backed up and visible to CI
+
+3. **Labels the bead**: Adds `swe:code-complete` label indicating work is ready for integration
+
+4. **Displays summary**: Shows what was completed for verification
+
+### When to Run Code-Complete
+
+Run `/dots-swe:code-complete` when:
+- ✅ All acceptance criteria are met
+- ✅ All code changes are committed locally
+- ✅ You're about to close the bead
+- ✅ You're about to say "done" or "complete"
+
+**Before running**:
+1. Squash commits if needed: `/dots-swe:squash`
+2. Ensure all changes committed: `git status` should be clean
+3. Review your changes one final time
+
+**After running**:
+- If it succeeds: Proceed to close bead and integration
+- If it fails: Fix the issue, commit, run code-complete again
+
+### NEVER Do This
+
+❌ **WRONG: Close bead without code-complete**
+```bash
+git commit -m "feat: add feature"
+bd close dots-abc-123
+# Agent: "Implementation complete!"
+```
+
+✅ **CORRECT: Code-complete, verify, then close**
+```bash
+git commit -m "feat: add feature"
+/dots-swe:code-complete           # ← REQUIRED STEP
+# ... code-complete runs quality gates, pushes, labels ...
+bd close dots-abc-123              # Only after code-complete succeeds
+```
+
+### Why This Matters
+
+Skipping code-complete means:
+- ❌ Untested code gets merged
+- ❌ Build failures discovered during integration (too late)
+- ❌ Wasted time fixing issues that should have been caught earlier
+- ❌ Integration delays for other work
+- ❌ Loss of confidence in quality process
+
+### Quality Gates Failures
+
+If `/dots-swe:code-complete` fails:
+
+1. **Read the error output carefully**
+2. **Identify which gate failed** (test/lint/build)
+3. **Fix the issue**:
+   - Tests failing: Fix the test or the code
+   - Lint failing: Run linter locally and fix issues
+   - Build failing: Check build errors and resolve
+4. **Commit the fix**
+5. **Run code-complete again**
+6. **Repeat until it passes**
+
+**DO NOT**:
+- ❌ Skip code-complete because "it's probably fine"
+- ❌ Close the bead with failing quality gates
+- ❌ Commit code that doesn't pass quality gates
+- ❌ Ask user to "fix it later"
+
+### Interim vs Final Checks
+
+**During development**: Use `/dots-swe:process-check`
+- Runs quality gates only
+- No push, no labeling
+- Quick feedback loop
+- Run as often as needed
+
+**Before closing**: Use `/dots-swe:code-complete`
+- Runs quality gates
+- Pushes to remote
+- Labels bead as complete
+- Final verification step
+- Run once when done
+
+### Enforcement
+
+The workflow has enforcement mechanisms:
+1. **Pre-commit hook**: May prompt if code-complete not run
+2. **Doctor command**: Checks for code-complete label
+3. **Integration command**: Expects code-complete label
+
+These are safety nets. Don't rely on them. Run code-complete proactively.
+
+### Example: Complete Workflow
+
+```bash
+# 1. Squash commits into logical units
+/dots-swe:squash
+
+# 2. Verify everything committed
+git status  # Should show clean
+
+# 3. Run code-complete (REQUIRED)
+/dots-swe:code-complete
+
+# Output:
+# ✅ Tests passed (23 tests)
+# ✅ Lint passed
+# ✅ Build passed
+# ✅ Pushed to origin/dots-abc-123
+# ✅ Added swe:code-complete label
+#
+# Bead Summary:
+# ID:     dots-abc-123
+# Title:  Add user authentication
+# Status: ready for integration
+
+# 4. Only now: close the bead
+bd close dots-abc-123
+
+# 5. Integration (usually separate session/later)
+/dots-swe:code-integrate dots-abc-123
+```
 
 ## Discovered Work
 
@@ -324,7 +466,26 @@ Be explicit about blockers:
 
 ### Completion
 
-When done, summarize:
+Before closing a bead, follow these steps:
+
+1. **Run final quality gates**:
+   ```
+   /dots-swe:code-complete
+   ```
+
+2. **If code-complete succeeds**:
+   - Verify bead has `swe:code-complete` label
+   - Close the bead: `bd close <bead-id>`
+   - Summarize completion (see template below)
+
+3. **If code-complete fails**:
+   - Read error output carefully
+   - Fix the issue
+   - Commit the fix
+   - Run `/dots-swe:code-complete` again
+   - Repeat until it passes
+
+**Completion summary template:**
 
 ```
 ## Completed
@@ -464,4 +625,5 @@ git log --oneline -5         # Recent history
 4. **Search before coding** - Find existing patterns
 5. **Test and verify** - Run /dots-swe:process-check frequently
 6. **Communicate clearly** - Show what's done, what's left, what's blocked
-7. **NEVER close beads** - Use /dots-swe:code-complete, not bd close
+7. **Run code-complete BEFORE closing** - Always run /dots-swe:code-complete before closing beads
+8. **NEVER close without code-complete** - If code-complete fails, fix and retry
