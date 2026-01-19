@@ -41,6 +41,9 @@ Start work on one or more beads by creating worktrees and opening Claude session
 /dots-swe:dispatch --dry-run dots-abc                 # Preview what would happen
 ```
 
+**macOS Permissions:**
+This command uses AppleScript to control terminals. If it fails to open tabs/windows, grant Automation permissions in System Settings → Privacy & Security → Automation. See `/dots-swe:help` for details.
+
 ## Implementation
 
 !bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/dispatch.sh 2>/dev/null | head -1)" "$@"

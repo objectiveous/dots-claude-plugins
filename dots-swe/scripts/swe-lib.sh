@@ -86,7 +86,16 @@ start_claude_in_window() {
 attach_iterm_to_tmux() {
   local session="$1"
 
-  osascript <<EOF
+  # Check permissions before attempting to control iTerm
+  if ! check_applescript_permissions; then
+    show_permission_instructions "iTerm2"
+    echo "INFO: tmux session '$session' is running in the background." >&2
+    echo "      You can attach manually by opening iTerm and running: tmux -CC attach -t $session" >&2
+    return 1
+  fi
+
+  local error_output
+  error_output=$(osascript 2>&1 <<EOF
 tell application "iTerm2"
     activate
     create window with default profile
@@ -95,13 +104,79 @@ tell application "iTerm2"
     end tell
 end tell
 EOF
+)
+
+  local exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+    echo "ERROR: Failed to control iTerm2 via AppleScript" >&2
+    echo "Details: $error_output" >&2
+    show_permission_instructions "iTerm2"
+    return 1
+  fi
+
+  return 0
+}
+
+# Check if AppleScript has required automation permissions
+# Returns: 0 if permissions OK, 1 if missing
+check_applescript_permissions() {
+  local test_app="${1:-Ghostty}"
+  local error_output
+
+  # Try a simple AppleScript command that requires automation permissions
+  error_output=$(osascript -e "tell application \"System Events\" to get name of first process" 2>&1)
+
+  if echo "$error_output" | grep -qi "not allowed\|not authorized\|permission"; then
+    return 1
+  fi
+
+  return 0
+}
+
+# Display permission instructions for macOS Automation
+show_permission_instructions() {
+  local app_name="${1:-the terminal or Claude Code}"
+
+  cat >&2 <<EOF
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  ERROR: Missing macOS Automation Permissions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The dispatch command needs permission to control Ghostty via AppleScript.
+
+To grant permissions:
+
+  1. Open System Settings (System Preferences on older macOS)
+  2. Go to: Privacy & Security → Automation
+  3. Find "$app_name" in the list
+  4. Enable checkboxes for:
+     ✓ Ghostty
+     ✓ System Events
+
+Alternative: Open the terminal manually and run:
+  zmx attach <bead-id>
+
+For more info, see:
+https://support.apple.com/guide/mac-help/control-access-to-system-automation-mh43028
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
 }
 
 # Attach Ghostty to tmux session
 attach_ghostty_to_tmux() {
   local session="$1"
 
-  osascript <<EOF
+  if ! check_applescript_permissions; then
+    show_permission_instructions
+    echo "INFO: zmx session '$session' is running in the background." >&2
+    echo "      You can attach manually with: zmx attach $session" >&2
+    return 1
+  fi
+
+  local error_output
+  error_output=$(osascript 2>&1 <<EOF
 tell application "Ghostty"
     activate
 end tell
@@ -115,6 +190,17 @@ tell application "System Events"
     end tell
 end tell
 EOF
+)
+
+  local exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+    echo "ERROR: Failed to control Ghostty via AppleScript" >&2
+    echo "Details: $error_output" >&2
+    show_permission_instructions
+    return 1
+  fi
+
+  return 0
 }
 
 # =============================================================================
@@ -156,8 +242,19 @@ open_ghostty_zmx_tab() {
 
   abs_path="$(cd "$worktree_path" && pwd)"
 
+  # Check permissions before attempting to control Ghostty
+  if ! check_applescript_permissions; then
+    show_permission_instructions
+    echo "" >&2
+    echo "INFO: zmx session '$session_name' is running in the background." >&2
+    echo "      Open Ghostty manually and run: zmx attach $session_name" >&2
+    echo "      Or use --window flag to use the 'open' command instead (no permissions needed)." >&2
+    return 1
+  fi
+
   # Use AppleScript to open new tab and run command
-  osascript <<EOF
+  local error_output
+  error_output=$(osascript 2>&1 <<EOF
 tell application "ghostty"
     activate
 end tell
@@ -171,6 +268,20 @@ tell application "System Events"
     end tell
 end tell
 EOF
+)
+
+  local exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+    echo "ERROR: Failed to control Ghostty via AppleScript" >&2
+    echo "Details: $error_output" >&2
+    show_permission_instructions
+    echo "" >&2
+    echo "INFO: zmx session '$session_name' is running in the background." >&2
+    echo "      Open Ghostty manually and run: zmx attach $session_name" >&2
+    return 1
+  fi
+
+  return 0
 }
 
 # Open Ghostty with zmx session (window or tab based on SWE_GHOSTTY_MODE)
