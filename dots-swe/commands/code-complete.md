@@ -50,11 +50,12 @@ Marks code as complete by running quality gates, pushing to remote, and updating
   echo "  --help, -h      Show this help"
   echo ""
   echo "The command will:"
+  echo "  0. Fetch and rebase onto origin/main"
   echo "  1. Verify no uncommitted changes"
   echo "  2. Run tests"
   echo "  3. Run linter"
   echo "  4. Run build"
-  echo "  5. Push to remote"
+  echo "  5. Push to remote (with --force-with-lease after rebase)"
   echo "  6. Add comment to bead"
   echo "  7. Add swe:code-complete label (keeps status: in_progress)"
   echo ""
@@ -84,6 +85,43 @@ fi
   echo "Commit your changes before marking code complete."
   exit 1
 fi
+
+# Step 0: Fetch and rebase onto main
+!echo "------------------------------------------------------------------"
+!echo "Step 0: Fetching latest and rebasing onto main..."
+!echo ""
+
+# Fetch latest from origin
+!if ! git fetch origin; then
+  echo "ERROR: Failed to fetch from origin"
+  exit 1
+fi
+
+# Check if we're already up to date with origin/main
+!BEHIND=$(git rev-list --count HEAD..origin/main 2>/dev/null || echo "0")
+!if [ "$BEHIND" = "0" ]; then
+  echo "Already up to date with origin/main"
+else
+  echo "Behind origin/main by $BEHIND commits, rebasing..."
+
+  # Attempt rebase
+  if git rebase origin/main; then
+    echo "Rebase successful"
+  else
+    echo ""
+    echo "ERROR: Rebase failed due to conflicts"
+    echo ""
+    echo "To resolve:"
+    echo "  1. Fix conflicts in the files listed above"
+    echo "  2. Stage resolved files: git add <file>"
+    echo "  3. Continue rebase: git rebase --continue"
+    echo "  4. Or abort: git rebase --abort"
+    echo ""
+    echo "After resolving conflicts, run /dots-swe:code-complete again"
+    exit 1
+  fi
+fi
+!echo ""
 
 # Detect project type and commands
 !eval "$(detect_project_commands)"
@@ -150,7 +188,13 @@ fi
 # Step 4: Push to remote
 !echo "------------------------------------------------------------------"
 !echo "Step 4: Pushing to remote..."
-!git push -u origin "$BRANCH"
+# Use --force-with-lease if we rebased (safer than --force)
+!if [ "$BEHIND" != "0" ]; then
+  echo "Using --force-with-lease after rebase..."
+  git push --force-with-lease -u origin "$BRANCH"
+else
+  git push -u origin "$BRANCH"
+fi
 !echo "Push complete"
 !echo ""
 
