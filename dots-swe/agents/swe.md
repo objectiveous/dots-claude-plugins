@@ -171,6 +171,108 @@ When you find issues outside your task scope:
 
 3. **Never silently ignore problems**
 
+## Error Handling
+
+When you encounter errors during work (script failures, undefined functions, tool errors, etc.), create a bead to track them. **Never silently ignore errors.**
+
+### Non-Blocking Errors
+
+For errors that don't prevent you from completing your current task:
+
+```bash
+# Create a bug to track the issue
+bd create --title="Fix: <brief error description>" \
+  --type=bug \
+  --priority=2 \
+  --description="Error in <file>:<line> - <details>
+
+Context: <what you were doing when you found this>
+Error message: <full error output>
+
+Example: Encountered while running tests in feature branch."
+
+# Continue with your primary task
+```
+
+**Examples of non-blocking errors:**
+- Linting warnings in unrelated files
+- Deprecated function warnings
+- Test failures in unrelated test suites
+- Minor script errors that don't affect your work
+
+### Blocking Errors
+
+For errors that prevent you from completing your task:
+
+```bash
+# 1. Create a bug for the blocker
+BLOCKER_ID=$(bd create --title="Blocker: <error description>" \
+  --type=bug \
+  --priority=1 \
+  --description="<detailed error information>" \
+  | grep -o 'beads-[0-9]*')
+
+# 2. Mark your current bead as blocked
+bd update $(cat .swe-bead) --status=blocked
+
+# 3. Add dependency
+bd dep add $(cat .swe-bead) "$BLOCKER_ID"
+
+# 4. Add comment explaining the block
+bd comment $(cat .swe-bead) "Blocked by $BLOCKER_ID: <explanation>"
+```
+
+**Then STOP and inform the user about the blocker.**
+
+**Examples of blocking errors:**
+- Command not found (missing dependencies)
+- Undefined functions in project scripts
+- Failed quality gates (tests, lint, build)
+- Missing files or broken imports
+- Authentication/permission errors
+
+### Common Error Scenarios
+
+**Undefined function in script:**
+```bash
+# Example: "get_integration_resources: command not found"
+bd create --title="Fix undefined function: get_integration_resources" \
+  --type=bug \
+  --priority=2 \
+  --description="Error in code-integrate.sh:240
+
+Function not defined in swe-lib.sh or any sourced files.
+Impact: code-integrate command fails when running integration."
+```
+
+**Failed quality gate:**
+```bash
+# Example: Tests failing after implementation
+bd create --title="Fix failing tests in auth module" \
+  --type=bug \
+  --priority=1 \
+  --description="Test suite: src/auth/__tests__/login.test.ts
+
+Failures:
+- test 'should handle invalid credentials' - expected 401, got 500
+- test 'should set auth cookie' - cookie not set
+
+Needs investigation and fix."
+```
+
+**Missing dependency:**
+```bash
+# Example: "npm ERR! missing: typescript@^5.0.0"
+bd create --title="Add missing dependency: typescript@^5.0.0" \
+  --type=bug \
+  --priority=1 \
+  --description="Build fails with missing typescript dependency.
+
+Error: npm ERR! missing: typescript@^5.0.0, required by project@1.0.0
+
+Action needed: Add typescript to package.json dependencies."
+```
+
 ## When to Ask for Help
 
 **Ask immediately when:**
