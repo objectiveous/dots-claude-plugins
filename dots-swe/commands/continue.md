@@ -4,7 +4,18 @@ description: Continue work on an existing bead - reattach to session
 ---
 
 <claude-instructions>
-When the user runs this command:
+**IMPORTANT - Check if skill is already loaded:**
+
+If you see a `<command-name>` tag in the current conversation turn:
+- The skill has ALREADY been loaded by the system
+- DO NOT call the Skill tool
+- Execute the behavior described below directly
+
+If there is NO `<command-name>` tag in the current conversation turn:
+- Call the Skill tool to load and execute this skill
+- Check the tool result and follow the behavior described below
+
+**Behavior when executing this command:**
 
 **If a bead ID is provided** (e.g., `/dots-swe:continue dots-abc`):
 1. Run the continue script with the provided bead ID
