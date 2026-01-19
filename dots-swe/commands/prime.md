@@ -5,6 +5,20 @@ execution-mode: atomic-bash
 ---
 
 <claude-instructions>
+**IMPORTANT - Check if skill is already loaded:**
+
+If you see a `<command-name>` tag in the current conversation turn:
+- The skill has ALREADY been loaded by the system
+- DO NOT call the Skill tool
+- Execute the bash script below directly using the Bash tool
+- The output will be automatically injected as system context
+
+If there is NO `<command-name>` tag in the current conversation turn:
+- Call the Skill tool to load and execute this skill
+- Check the tool result immediately
+
+**About this command:**
+
 This command loads enhanced session context including quality gates in the SESSION CLOSE PROTOCOL.
 It replaces/enhances bd prime output to ensure agents run tests/lint/build before committing.
 
