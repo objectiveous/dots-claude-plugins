@@ -184,3 +184,43 @@ fi
 !echo ""
 !echo "  - Check what's ready to integrate:"
 !echo "    /dots-swe:code-integrate-status"
+!echo ""
+
+# Display bead summary
+!CURRENT_BEAD=$(get_current_bead)
+!if [ -n "$CURRENT_BEAD" ]; then
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "Bead Summary"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+
+  # Fetch bead metadata using JSON output for reliable parsing
+  # Extract only the fields we need to avoid control character issues
+  BEAD_ID=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].id // ""' 2>/dev/null)
+  BEAD_TITLE=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].title // ""' 2>/dev/null)
+  BEAD_TYPE=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].issue_type // ""' 2>/dev/null)
+  BEAD_STATUS=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].status // ""' 2>/dev/null)
+  BEAD_PARENT=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].parent // ""' 2>/dev/null)
+
+  if [ -n "$BEAD_ID" ]; then
+    echo "ID:     $BEAD_ID"
+    echo "Title:  $BEAD_TITLE"
+    echo "Type:   $BEAD_TYPE"
+    echo "Status: $BEAD_STATUS (marked swe:code-complete)"
+
+    # Display parent if it exists
+    if [ -n "$BEAD_PARENT" ] && [ "$BEAD_PARENT" != "null" ]; then
+      # Get parent title
+      PARENT_TITLE=$(bd show "$BEAD_PARENT" --json 2>/dev/null | jq -r '.[0].title // ""' 2>/dev/null)
+      if [ -n "$PARENT_TITLE" ]; then
+        echo "Parent: $BEAD_PARENT - $PARENT_TITLE"
+      else
+        echo "Parent: $BEAD_PARENT"
+      fi
+    fi
+    echo ""
+  else
+    echo "Unable to fetch bead metadata for: $CURRENT_BEAD"
+    echo ""
+  fi
+fi
