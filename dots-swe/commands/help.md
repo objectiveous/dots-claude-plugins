@@ -36,6 +36,7 @@ Software engineering tools for Claude Code - work management, beads integration,
 | Command | Description |
 |---------|-------------|
 | `/dots-swe:beads` | Show available work and beads reference |
+| `/dots-swe:deps [bead-id]` | Visualize dependency graph and epic hierarchies |
 
 ### Git Tools
 

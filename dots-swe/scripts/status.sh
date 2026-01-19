@@ -270,6 +270,32 @@ fi
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════
+# Dependency Summary
+# ═══════════════════════════════════════════════════════════════════
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔗 Dependency Summary"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Count blocked issues
+BLOCKED_OUTPUT=$(bd blocked 2>/dev/null | grep "^[a-z]" || echo "")
+if [ -n "$BLOCKED_OUTPUT" ]; then
+  BLOCKED_COUNT=$(echo "$BLOCKED_OUTPUT" | wc -l | tr -d ' ')
+else
+  BLOCKED_COUNT=0
+fi
+
+if [ "$BLOCKED_COUNT" -gt 0 ]; then
+  echo "  Blocked issues: $BLOCKED_COUNT"
+  echo ""
+  echo "  Run: /dots-swe:deps to visualize dependency graph"
+  echo "  Run: /dots-swe:deps <bead-id> for detailed dependency tree"
+else
+  echo "  No blocked issues - all work is unblocked!"
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════
 # Quick Actions
 # ═══════════════════════════════════════════════════════════════════
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -280,5 +306,6 @@ echo "Start work:     /dots-swe:dispatch <bead-id>"
 echo "Continue work:  /dots-swe:continue <bead-id>"
 echo "Code complete:  /dots-swe:code-complete"
 echo "Integrate code: /dots-swe:code-integrate <bead-id>"
+echo "View deps:      /dots-swe:deps [bead-id]"
 echo "Health check:   /dots-swe:doctor"
 echo ""
