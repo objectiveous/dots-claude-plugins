@@ -96,6 +96,23 @@ Software engineering tools for Claude Code - work management, beads integration,
 - `--tab` (default): Open in new tab
 - `--window`: Open in new window
 
+**macOS Automation Permissions:**
+
+The `/dispatch` and `/continue` commands use AppleScript to control terminals. You need to grant Automation permissions:
+
+1. Open System Settings → Privacy & Security → Automation
+2. Find your terminal app (or Claude Code CLI) in the list
+3. Enable checkboxes for:
+   - Ghostty (if using Ghostty)
+   - iTerm2 (if using iTerm)
+   - System Events
+
+If permissions are missing, sessions will start in the background and you can attach manually:
+```bash
+zmx attach <bead-id>    # For Ghostty
+tmux attach -t <id>     # For iTerm
+```
+
 ## Context Files
 
 In each workspace:
