@@ -26,6 +26,7 @@ Software engineering tools for Claude Code - work management, beads integration,
 
 | Command | Description |
 |---------|-------------|
+| `/dots-swe:prime` | Enhanced context loader with quality gates enforcement |
 | `/dots-swe:process-check` | Run quality gates: test, lint, build |
 | `/dots-swe:code-complete` | Mark code complete: test, lint, build, push, update bead |
 | `/dots-swe:doctor` | Health check for repository |
