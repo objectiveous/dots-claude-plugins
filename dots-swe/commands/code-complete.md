@@ -195,15 +195,14 @@ fi
   echo ""
 
   # Fetch bead metadata using JSON output for reliable parsing
-  BEAD_JSON=$(bd show "$CURRENT_BEAD" --json 2>/dev/null)
+  # Extract only the fields we need to avoid control character issues
+  BEAD_ID=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].id // ""' 2>/dev/null)
+  BEAD_TITLE=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].title // ""' 2>/dev/null)
+  BEAD_TYPE=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].issue_type // ""' 2>/dev/null)
+  BEAD_STATUS=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].status // ""' 2>/dev/null)
+  BEAD_PARENT=$(bd show "$CURRENT_BEAD" --json 2>/dev/null | jq -r '.[0].parent // ""' 2>/dev/null)
 
-  if [ -n "$BEAD_JSON" ]; then
-    BEAD_ID=$(echo "$BEAD_JSON" | jq -r '.[0].id // ""')
-    BEAD_TITLE=$(echo "$BEAD_JSON" | jq -r '.[0].title // ""')
-    BEAD_TYPE=$(echo "$BEAD_JSON" | jq -r '.[0].issue_type // ""')
-    BEAD_STATUS=$(echo "$BEAD_JSON" | jq -r '.[0].status // ""')
-    BEAD_PARENT=$(echo "$BEAD_JSON" | jq -r '.[0].parent // ""')
-
+  if [ -n "$BEAD_ID" ]; then
     echo "ID:     $BEAD_ID"
     echo "Title:  $BEAD_TITLE"
     echo "Type:   $BEAD_TYPE"
@@ -212,7 +211,7 @@ fi
     # Display parent if it exists
     if [ -n "$BEAD_PARENT" ] && [ "$BEAD_PARENT" != "null" ]; then
       # Get parent title
-      PARENT_TITLE=$(bd show "$BEAD_PARENT" --json 2>/dev/null | jq -r '.[0].title // ""')
+      PARENT_TITLE=$(bd show "$BEAD_PARENT" --json 2>/dev/null | jq -r '.[0].title // ""' 2>/dev/null)
       if [ -n "$PARENT_TITLE" ]; then
         echo "Parent: $BEAD_PARENT - $PARENT_TITLE"
       else
