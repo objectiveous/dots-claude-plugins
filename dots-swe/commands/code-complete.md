@@ -5,12 +5,9 @@ execution-mode: atomic-bash
 ---
 
 <claude-instructions>
-After calling the Skill tool:
-1. Check the tool result immediately - it may contain execution output or status information
-2. If the bash script executed, report the complete output to the user
-3. If you see a task_id or background process reference, use TaskOutput to check its status
-4. DO NOT wait passively - actively check results and report to the user
-5. DO NOT manually run individual bash commands from this skill definition
+1. The bash script below will execute AUTOMATICALLY by the skill framework
+2. DO NOT manually run individual bash commands from this skill
+3. Wait for the skill execution output and report the result to the user
 </claude-instructions>
 
 # Code Complete
@@ -79,10 +76,10 @@ fi
 !echo ""
 
 # Check for uncommitted changes (excluding swe metadata files)
-!CHANGES=$(git status --porcelain | grep -v '.swe-' | wc -l | tr -d ' ')
+!CHANGES=$(git status --porcelain | grep -v '^?? \.swe-' | wc -l | tr -d ' ')
 !if [ "$CHANGES" -gt 0 ]; then
   echo "WARNING: You have uncommitted changes:"
-  git status --short | grep -v '.swe-'
+  git status --short | grep -v '^?? \.swe-'
   echo ""
   echo "Commit your changes before marking code complete."
   exit 1
