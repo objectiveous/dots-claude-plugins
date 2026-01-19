@@ -1125,3 +1125,37 @@ get_cleanup_resources() {
 
   echo "$resources"
 }
+
+# =============================================================================
+# Dependency Visualization Helpers
+# =============================================================================
+
+# Show dependency tree with enhanced status indicators
+# Usage: show_dependency_tree <bead_id> [direction]
+# direction: down (dependencies), up (dependents), both (default)
+show_dependency_tree() {
+  local bead_id="$1"
+  local direction="${2:-both}"
+
+  # Check if bd is available
+  if ! command -v bd >/dev/null 2>&1; then
+    echo "Error: bd command not available" >&2
+    return 1
+  fi
+
+  # Add visual status indicators to bd dep tree output
+  bd dep tree "$bead_id" --direction="$direction" 2>/dev/null | while IFS= read -r line; do
+    # Enhance with status symbols based on status
+    if echo "$line" | grep -q "(open)"; then
+      echo "$line ✓"
+    elif echo "$line" | grep -q "(blocked)"; then
+      echo "$line ⏸"
+    elif echo "$line" | grep -q "(in_progress)"; then
+      echo "$line ◐"
+    elif echo "$line" | grep -q "(closed)"; then
+      echo "$line ✅"
+    else
+      echo "$line"
+    fi
+  done
+}
