@@ -263,7 +263,7 @@ tell application "System Events"
     tell process "ghostty"
         keystroke "t" using command down
         delay 0.3
-        keystroke "printf '\\\\033]0;$session_name\\\\007' && cd '$abs_path' && zmx attach '$session_name'"
+        keystroke "printf '\\\\033]0;$session_name\\\\007' && cd '$abs_path' && printf '\\\\033]0;$session_name\\\\007' && zmx attach '$session_name'"
         keystroke return
     end tell
 end tell
