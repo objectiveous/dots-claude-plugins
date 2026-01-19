@@ -232,6 +232,6 @@ fi
   echo "Updating bead $BEAD_ID to ready_to_merge..."
   bd update "$BEAD_ID" --status=ready_to_merge 2>/dev/null
   bd comment "$BEAD_ID" "PR ready - CI passed" 2>/dev/null
-  bd sync 2>/dev/null
+  bd sync --message "chore: sync beads database" 2>/dev/null
   echo "✅ Bead updated"
 fi

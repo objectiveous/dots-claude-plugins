@@ -88,7 +88,7 @@ bd ready              # Find available work
 bd show <id>          # View issue details
 bd update <id> --status in_progress
 bd close <id>
-bd sync               # Sync with git
+bd sync --message "chore: sync beads database"  # Sync with git
 ```
 
 ## Session Completion Protocol

@@ -64,7 +64,7 @@ fi
 !echo "  bd create --interactive                  - Interactive creation"
 !echo ""
 !echo "Sync:"
-!echo "  bd sync                      - Sync with git"
+!echo "  bd sync --message \"chore: sync beads database\" - Sync with git"
 !echo ""
 !echo "Squash commits before merge:"
 !echo "  git rebase -i main           - Squash into logical commits"

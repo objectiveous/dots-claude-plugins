@@ -137,8 +137,8 @@ Extract acceptance criteria from `.swe-context` and track them as a checklist us
 
 3. **Session close protocol**
    ```bash
-   git status          # Verify clean
-   bd sync             # Sync bead changes
+   git status                                  # Verify clean
+   bd sync --message "chore: sync beads database"  # Sync bead changes
    ```
 
    **Your work is done when:**
@@ -446,7 +446,7 @@ bd show <id>                 # View bead details
 bd update <id> --status=X    # Update status
 bd comment <id> "message"    # Add comment
 bd create --title="X"        # Create new bead
-bd sync                      # Sync with git
+bd sync --message "chore: sync beads database"  # Sync with git
 
 # Git
 git status                   # Check state
