@@ -95,10 +95,10 @@ fi
 fi
 
 # Check for uncommitted changes
-!CHANGES=$(git status --porcelain | grep -v '^\?\? \.swe-' | wc -l | tr -d ' ')
+!CHANGES=$(git status --porcelain | grep -v '.swe-' | wc -l | tr -d ' ')
 !if [ "$CHANGES" -gt 0 ]; then
   echo "WARNING: You have uncommitted changes:"
-  git status --short | grep -v '^\?\? \.swe-'
+  git status --short | grep -v '.swe-'
   echo ""
   echo "Please commit or stash your changes before squashing."
   exit 1
