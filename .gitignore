@@ -1,3 +1,4 @@
 # Local worktree data
 .worktrees/
 .idea/
+.zmx-session
