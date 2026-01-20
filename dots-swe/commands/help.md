@@ -80,6 +80,8 @@ Software engineering tools for Claude Code - work management, beads integration,
 
 **CRITICAL:** You MUST run `/dots-swe:code-complete` before closing any bead. This is non-negotiable and ensures quality gates pass before integration.
 
+**SESSION CLOSE PROTOCOL:** When you start a session, `/dots-swe:prime` displays a checklist with `/dots-swe:code-complete` as Step 0. You MUST complete this step before saying work is "done" or "complete".
+
 **If you need to step away:**
 ```bash
 # Detach with ctrl+\ (Ghostty) or close window (iTerm)

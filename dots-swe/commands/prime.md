@@ -19,13 +19,15 @@ If there is NO `<command-name>` tag in the current conversation turn:
 
 **About this command:**
 
-This command loads enhanced session context including quality gates in the SESSION CLOSE PROTOCOL.
-It replaces/enhances bd prime output to ensure agents run tests/lint/build before committing.
+This command loads enhanced session context with a SESSION CLOSE PROTOCOL that mandates /dots-swe:code-complete.
 
 The output includes:
 - Bead context from .swe-bead and .swe-context files
 - Git status and recent commits
-- Enhanced SESSION CLOSE PROTOCOL with quality gates as Step 0
+- Enhanced SESSION CLOSE PROTOCOL with /dots-swe:code-complete as Step 0
+- Workflow mode detection (GitHub PR vs local/ephemeral)
+- Quality gates detection and display (test/lint/build)
+- Failure handling guidance
 - Project conventions from CLAUDE.md
 
 This command is automatically called on SessionStart by the dots-swe hook.
@@ -34,14 +36,18 @@ You can also call it manually via /dots-swe:prime to refresh context.
 
 # Enhanced Context Loader
 
-Loads session context with enhanced SESSION CLOSE PROTOCOL that includes quality gates.
+Loads session context with enhanced SESSION CLOSE PROTOCOL that mandates code-complete.
 
 **Usage:** `/dots-swe:prime`
 
 This command enhances `bd prime` output by:
-- Adding quality gates (test/lint/build) as Step 0 in SESSION CLOSE PROTOCOL
-- Detecting project type and adapting recommendations
-- Providing prominent enforcement checklist
+- Making /dots-swe:code-complete Step 0 in SESSION CLOSE PROTOCOL (REQUIRED)
+- Detecting workflow mode (GitHub PR vs local/ephemeral)
+- Adapting protocol based on workflow mode
+- Detecting quality gates (test/lint/build) and showing what will run
+- Providing visual hierarchy with arrows (↓) showing flow
+- Including failure handling guidance
+- Emphasizing DO NOT proceed if code-complete fails
 
 ## Implementation
 

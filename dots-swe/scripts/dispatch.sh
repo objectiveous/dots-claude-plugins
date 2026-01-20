@@ -254,8 +254,11 @@ $BEAD_INFO
 
 ## Quick Reference
 
-- Run \`/dots-swe:process-check\` before committing to verify tests, lint, and build
-- Run \`/dots-swe:code-complete\` when code is ready for review and merge
+**CRITICAL:** Run \`/dots-swe:code-complete\` when code is ready (REQUIRED before closing bead)
+  - This runs tests, lint, build, pushes code, and marks bead ready for merge
+  - DO NOT skip this step - it's required by the SESSION CLOSE PROTOCOL
+
+- Run \`/dots-swe:process-check\` for interim quality checks (test/lint/build only)
 - Update bead status: \`bd update $BEAD_ID --status=<status>\`
   - Statuses: \`in_progress\`, \`blocked\`, \`open\`, \`closed\`
 - Add notes: \`bd comment $BEAD_ID "Your comment here"\`

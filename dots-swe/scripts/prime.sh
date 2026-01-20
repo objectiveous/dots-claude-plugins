@@ -34,44 +34,81 @@ fi
 # 3. Detect project type for quality gates
 eval "$(detect_project_commands)"
 
+# Detect workflow mode (GitHub PR or local/ephemeral)
+WORKFLOW_MODE=$(detect_workflow_mode)
+
 # 4. Build enhanced SESSION CLOSE PROTOCOL
 CONTEXT+="# 🚨 SESSION CLOSE PROTOCOL 🚨\n\n"
 CONTEXT+="**CRITICAL**: Before saying \"done\" or \"complete\", you MUST run this checklist:\n\n"
-CONTEXT+="\`\`\`\n"
 
-# Determine quality gates command based on what's detected
-QUALITY_CMD=""
+# Determine if we have quality gates
 HAS_QUALITY_GATES=false
-
 if [ -n "$TEST_CMD" ] || [ -n "$LINT_CMD" ] || [ -n "$BUILD_CMD" ]; then
   HAS_QUALITY_GATES=true
-  QUALITY_CMD="/dots-swe:process-check"
 fi
 
-# Add Step 0 for quality gates (if project has them)
-if [ "$HAS_QUALITY_GATES" = true ]; then
-  CONTEXT+="[ ] 0. $QUALITY_CMD          (run tests, lint, build)\n"
-fi
+# Build protocol based on workflow mode
+if [ "$WORKFLOW_MODE" = "github" ]; then
+  # GitHub PR Workflow
+  CONTEXT+="\`\`\`\n"
+  CONTEXT+="[ ] 0. Run /dots-swe:code-complete\n"
+  CONTEXT+="       ↓ This command does ALL of the following:\n"
 
-# Add original bd prime protocol steps
-CONTEXT+="[ ] 1. git status              (check what changed)\n"
-CONTEXT+="[ ] 2. git add <files>         (stage code changes)\n"
-CONTEXT+="[ ] 3. bd sync --from-main     (pull beads updates from main)\n"
-CONTEXT+="[ ] 4. git commit -m \"...\"     (commit code changes)\n"
-CONTEXT+="\`\`\`\n\n"
+  if [ "$HAS_QUALITY_GATES" = true ]; then
+    CONTEXT+="       • Runs quality gates:\n"
+    [ -n "$TEST_CMD" ] && CONTEXT+="         - Tests: $TEST_CMD\n"
+    [ -n "$LINT_CMD" ] && CONTEXT+="         - Lint: $LINT_CMD\n"
+    [ -n "$BUILD_CMD" ] && CONTEXT+="         - Build: $BUILD_CMD\n"
+  else
+    CONTEXT+="       • No quality gates detected (no tests/lint/build)\n"
+  fi
 
-# Add explanation
-if [ "$HAS_QUALITY_GATES" = true ]; then
-  CONTEXT+="**Note:** This is an ephemeral branch (no upstream). Code is merged to main locally, not pushed.\n\n"
-  CONTEXT+="**Quality Gates Detected:**\n"
-  [ -n "$TEST_CMD" ] && CONTEXT+="- Tests: \`$TEST_CMD\`\n"
-  [ -n "$LINT_CMD" ] && CONTEXT+="- Lint: \`$LINT_CMD\`\n"
-  [ -n "$BUILD_CMD" ] && CONTEXT+="- Build: \`$BUILD_CMD\`\n"
+  CONTEXT+="       • Pushes code to remote\n"
+  CONTEXT+="       • Creates/updates PR\n"
+  CONTEXT+="       • Adds swe:code-complete label to bead\n"
+  CONTEXT+="       ↓ DO NOT proceed if this fails\n"
+  CONTEXT+="       ↓ Fix issues and run code-complete again\n"
   CONTEXT+="\n"
+  CONTEXT+="[ ] 1. bd sync --from-main     (pull beads updates from main)\n"
+  CONTEXT+="[ ] 2. git status              (verify everything committed and pushed)\n"
+  CONTEXT+="\`\`\`\n\n"
+  CONTEXT+="**Note:** GitHub PR workflow detected.\n"
+  CONTEXT+="Next: Wait for PR review and CI to pass, then run /dots-swe:code-integrate\n\n"
 else
-  CONTEXT+="**Note:** No quality gates detected (no tests/lint/build commands found).\n"
-  CONTEXT+="This is an ephemeral branch (no upstream). Code is merged to main locally, not pushed.\n\n"
+  # Local/Ephemeral Workflow
+  CONTEXT+="\`\`\`\n"
+  CONTEXT+="[ ] 0. Run /dots-swe:code-complete\n"
+  CONTEXT+="       ↓ This command does ALL of the following:\n"
+
+  if [ "$HAS_QUALITY_GATES" = true ]; then
+    CONTEXT+="       • Runs quality gates:\n"
+    [ -n "$TEST_CMD" ] && CONTEXT+="         - Tests: $TEST_CMD\n"
+    [ -n "$LINT_CMD" ] && CONTEXT+="         - Lint: $LINT_CMD\n"
+    [ -n "$BUILD_CMD" ] && CONTEXT+="         - Build: $BUILD_CMD\n"
+  else
+    CONTEXT+="       • No quality gates detected (no tests/lint/build)\n"
+  fi
+
+  CONTEXT+="       • Pushes code to remote (if upstream configured)\n"
+  CONTEXT+="       • Adds swe:code-complete label to bead\n"
+  CONTEXT+="       • Marks work ready for integration\n"
+  CONTEXT+="       ↓ DO NOT proceed to next steps if this fails\n"
+  CONTEXT+="       ↓ Fix issues and run code-complete again\n"
+  CONTEXT+="\n"
+  CONTEXT+="[ ] 1. git status              (verify what changed)\n"
+  CONTEXT+="[ ] 2. git add <files>         (stage code changes)\n"
+  CONTEXT+="[ ] 3. bd sync --from-main     (pull beads updates from main)\n"
+  CONTEXT+="[ ] 4. git commit -m \"...\"     (commit code changes)\n"
+  CONTEXT+="\`\`\`\n\n"
+  CONTEXT+="**Note:** This is an ephemeral branch (no upstream). Code is merged to main locally, not pushed.\n\n"
 fi
+
+# Add failure handling guidance
+CONTEXT+="**When code-complete fails:**\n"
+CONTEXT+="• Read the error output carefully\n"
+CONTEXT+="• Fix the failing quality gate (test/lint/build)\n"
+CONTEXT+="• Run code-complete again\n"
+CONTEXT+="• Only commit after code-complete succeeds\n\n"
 
 # 5. Show git status
 CONTEXT+="## Git Status\n\n"
