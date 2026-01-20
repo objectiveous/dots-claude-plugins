@@ -277,6 +277,23 @@ CONTEXT
 echo "✅ Created .swe-context file"
 echo ""
 
+# Install quality hook
+echo "Installing quality hook..."
+HOOK_DIR="$WORKTREE_PATH/.git/hooks"
+HOOK_PATH="$HOOK_DIR/pre-commit"
+# Find the hook script in the plugin cache
+HOOK_SCRIPT=$(ls -t $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/pre-commit-quality-hook.sh 2>/dev/null | head -1)
+
+if [ -n "$HOOK_SCRIPT" ] && [ -f "$HOOK_SCRIPT" ]; then
+  mkdir -p "$HOOK_DIR"
+  cp "$HOOK_SCRIPT" "$HOOK_PATH"
+  chmod +x "$HOOK_PATH"
+  echo "✅ Quality hook installed"
+else
+  echo "⚠️  Could not find quality hook script (continuing anyway)"
+fi
+echo ""
+
 # Claim the bead
 echo "Claiming bead..."
 if bd update "$BEAD_ID" --status=in_progress 2>/dev/null; then

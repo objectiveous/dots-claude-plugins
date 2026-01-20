@@ -45,6 +45,8 @@ Software engineering tools for Claude Code - work management, beads integration,
 | `/dots-swe:squash` | Interactive rebase to squash commits |
 | `/dots-swe:install-commit-hook` | Install Conventional Commits validator |
 | `/dots-swe:uninstall-commit-hook` | Remove Conventional Commits validator |
+| `/dots-swe:install-quality-hook` | Install pre-commit hook to enforce code-complete workflow |
+| `/dots-swe:uninstall-quality-hook` | Remove pre-commit quality hook |
 
 ### Help
 

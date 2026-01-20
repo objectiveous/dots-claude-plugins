@@ -125,6 +125,28 @@ else
 fi
 echo ""
 
+# Check 5: Quality hook installation
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Quality Hook Status"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+HOOK_PATH="$REPO_ROOT/.git/hooks/pre-commit"
+if [ -f "$HOOK_PATH" ] && grep -q "Quality Gates Check" "$HOOK_PATH" 2>/dev/null; then
+  echo "✅ Quality hook installed"
+  echo "   Location: $HOOK_PATH"
+elif [ -f "$HOOK_PATH" ]; then
+  echo "⚠️  A pre-commit hook exists but it's not the quality hook"
+  echo "   Location: $HOOK_PATH"
+  echo "   Run /dots-swe:install-quality-hook to replace it"
+  ISSUES_FOUND=$((ISSUES_FOUND + 1))
+else
+  echo "⚠️  Quality hook not installed"
+  echo "   Run /dots-swe:install-quality-hook to install"
+  ISSUES_FOUND=$((ISSUES_FOUND + 1))
+fi
+echo ""
+
 # Summary
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Summary"
