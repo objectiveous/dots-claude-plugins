@@ -110,10 +110,10 @@ get_lead_state() {
 
 # Check if lead is running
 is_lead_running() {
-  local status=$(get_lead_state "status")
+  local lead_status=$(get_lead_state "status")
   local pid=$(get_lead_state "pid")
 
-  if [ "$status" = "running" ] && [ "$pid" != "null" ] && [ -n "$pid" ]; then
+  if [ "$lead_status" = "running" ] && [ "$pid" != "null" ] && [ -n "$pid" ]; then
     # Check if process is actually running
     if kill -0 "$pid" 2>/dev/null; then
       return 0
