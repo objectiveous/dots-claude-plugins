@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(bd:*), Bash(cat:*)
+allowed-tools: Bash
 description: Show truly dispatchable work (leaf tasks with no blockers)
 execution-mode: atomic-bash
 ---
