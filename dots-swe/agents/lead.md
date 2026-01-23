@@ -129,6 +129,12 @@ ACTIVE_SESSIONS=$(get_active_sessions)
 # Find dispatchable work
 READY_BEADS=$(get_dispatchable_beads)
 
+# Find design beads
+DESIGN_BEADS=$(get_design_beads)
+
+# Find design beads marked complete
+DESIGN_COMPLETE=$(get_design_complete_beads)
+
 # Find work ready for integration
 INTEGRATION_READY=$(get_integration_ready_beads)
 
@@ -143,18 +149,47 @@ LEAD CYCLE $(date +%H:%M:%S)
 ═══════════════════════════════════════════
 Active sessions: $ACTIVE_COUNT / $SWE_MAX_PARALLEL
 Ready work:      $(echo "$READY_BEADS" | wc -l | xargs)
+Design meetings: $(echo "$DESIGN_BEADS" | wc -l | xargs)
+Design complete: $(echo "$DESIGN_COMPLETE" | wc -l | xargs)
 Integration:     $(echo "$INTEGRATION_READY" | wc -l | xargs)
 Capacity:        $CAPACITY
 ```
 
 ## Phase 2: DISPATCH
 
-**Goal:** Start SWE agents on ready work (up to capacity)
+**Goal:** Start agents on ready work (up to capacity)
+
+### Dispatch Design Meetings First
+
+Design meetings take priority and use a different agent:
+
+```bash
+if [ "$CAPACITY" -gt 0 ] && [ -n "$DESIGN_BEADS" ]; then
+  echo ""
+  echo "DISPATCH (Design Meetings):"
+
+  # Design beads don't count against capacity (human-collaborative)
+  echo "$DESIGN_BEADS" | while read -r bead_id; do
+    echo "  → Starting design meeting for $bead_id..."
+
+    # Use Task tool to spawn engineering-design agent
+    # - subagent_type: "dots-swe:engineering-design"
+    # - model: "opus"
+    # - prompt: Collaborative design prompt (NOT "Go!")
+    # Example prompt:
+    # "Collaborate with the human on designing <bead_id>.
+    #  Read the bead details, explore the codebase, ask clarifying questions,
+    #  and help create a comprehensive design with well-formed implementation beads."
+  done
+fi
+```
+
+### Dispatch Implementation Work
 
 ```bash
 if [ "$CAPACITY" -gt 0 ] && [ -n "$READY_BEADS" ]; then
   echo ""
-  echo "DISPATCH:"
+  echo "DISPATCH (Implementation):"
 
   # Take first $CAPACITY beads
   echo "$READY_BEADS" | head -n "$CAPACITY" | while read -r bead_id; do
@@ -170,9 +205,18 @@ if [ "$CAPACITY" -gt 0 ] && [ -n "$READY_BEADS" ]; then
 fi
 ```
 
-**Use the Skill tool to invoke /dots-swe:dispatch:**
-- You MUST use the Skill tool, not run bash commands directly
+**Dispatch methods:**
+
+**For design beads:**
+- Use Task tool directly with `subagent_type: "dots-swe:engineering-design"`
+- Set `model: "opus"` for better design reasoning
+- Use collaborative prompt, NOT "Go!"
+- Design meetings are human-interactive, don't count against capacity
+
+**For implementation beads:**
+- Use Skill tool to invoke `/dots-swe:dispatch`
 - This ensures proper worktree + session creation
+- Uses SWE agent with default model (Sonnet)
 
 ## Phase 3: MONITOR
 
@@ -216,12 +260,33 @@ done
 
 ## Phase 4: INTEGRATE
 
-**Goal:** Merge completed work to main
+**Goal:** Merge completed work and close completed design beads
+
+### Close Completed Design Beads
+
+```bash
+if [ -n "$DESIGN_COMPLETE" ]; then
+  echo ""
+  echo "INTEGRATE (Design Beads):"
+
+  echo "$DESIGN_COMPLETE" | while read -r bead_id; do
+    echo "  → Closing design bead $bead_id..."
+
+    # Close the design bead
+    bd close "$bead_id" --reason="Design complete, implementation bead(s) created"
+
+    # Log success
+    echo "  ✅ Design bead $bead_id closed"
+  done
+fi
+```
+
+### Merge Implementation Work
 
 ```bash
 if [ "$SWE_AUTO_INTEGRATE" = "true" ] && [ -n "$INTEGRATION_READY" ]; then
   echo ""
-  echo "INTEGRATE:"
+  echo "INTEGRATE (Implementation):"
 
   echo "$INTEGRATION_READY" | while read -r bead_id; do
     echo "  → Integrating $bead_id..."
@@ -239,7 +304,15 @@ if [ "$SWE_AUTO_INTEGRATE" = "true" ] && [ -n "$INTEGRATION_READY" ]; then
 fi
 ```
 
-**Use the Skill tool to invoke /dots-swe:code-integrate:**
+**Integration methods:**
+
+**For design beads:**
+- Simply close them with `bd close`
+- Design content stays in the bead's --design field
+- Implementation beads reference the design bead
+
+**For implementation beads:**
+- Use Skill tool to invoke `/dots-swe:code-integrate`
 - This handles the full integration workflow
 - Failures will trigger escalations automatically
 
@@ -384,17 +457,26 @@ LEAD CYCLE 14:32:15
 ═══════════════════════════════════════════
 Active sessions: 2 / 3
 Ready work:      5
+Design meetings: 1
+Design complete: 1
 Integration:     1
 Capacity:        1
 
-DISPATCH:
+DISPATCH (Design Meetings):
+  → Starting design meeting for dots-xyz-001...
+
+DISPATCH (Implementation):
   → Dispatching dots-abc-123...
 
 MONITOR:
   ✓ dots-def-456 - active
   • dots-ghi-789 - quiet
 
-INTEGRATE:
+INTEGRATE (Design Beads):
+  → Closing design bead dots-xyz-002...
+  ✅ Design bead dots-xyz-002 closed
+
+INTEGRATE (Implementation):
   → Integrating dots-jkl-012...
   ✅ Merged to main, bead closed
 
