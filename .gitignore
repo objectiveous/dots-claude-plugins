@@ -2,3 +2,6 @@
 .worktrees/
 .idea/
 .zmx-session
+
+# bv (beads viewer) local config and caches
+.bv/
