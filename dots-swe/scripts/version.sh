@@ -95,6 +95,45 @@ check_dependency "zmx" "zmx (session manager)" "--version" || true
 check_dependency "tmux" "tmux (session manager)" "-V" || true
 
 echo ""
+
+# Development Mode Status
+echo "Development Mode"
+echo ""
+
+if [ -n "${DOTS_SWE_DEV:-}" ]; then
+  echo "✅ Enabled (DOTS_SWE_DEV is set)"
+  echo "   Path: $DOTS_SWE_DEV"
+
+  # Verify the path is valid
+  if [ -d "$DOTS_SWE_DEV/scripts" ]; then
+    echo "   Status: ✅ Valid development directory"
+
+    # Show which scripts directory is being used
+    RESOLVED_SCRIPTS=$(ls -td "${DOTS_SWE_DEV:-/nonexistent}/scripts" "$HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/"*/scripts 2>/dev/null | head -1)
+    if [ "$RESOLVED_SCRIPTS" = "$DOTS_SWE_DEV/scripts" ]; then
+      echo "   Active: ✅ Using development scripts"
+    else
+      echo "   Active: ⚠️  Using cache (dev path not prioritized)"
+    fi
+  else
+    echo "   Status: ❌ Invalid (scripts directory not found)"
+  fi
+
+  echo ""
+  echo "To disable: unset DOTS_SWE_DEV"
+  echo "For details: cat $DOTS_SWE_DEV/DEV.md"
+else
+  echo "❌ Disabled (DOTS_SWE_DEV not set)"
+  echo ""
+  echo "To enable plugin development mode:"
+  echo "  export DOTS_SWE_DEV=/path/to/dots-swe"
+  echo ""
+  echo "Or add to ~/.zshrc or ~/.bashrc for persistence"
+  echo ""
+  echo "For details: cat $(dirname "$PLUGIN_ROOT")/dots-swe/DEV.md"
+fi
+
+echo ""
 echo ""
 echo "For help, run: /dots-swe:help"
 echo ""
