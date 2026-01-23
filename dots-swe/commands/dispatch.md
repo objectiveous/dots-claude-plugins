@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(bash:*)
+allowed-tools: Bash
 description: Start work on a bead - creates workspace and opens Claude session
 execution-mode: atomic-bash
 ---
