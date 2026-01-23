@@ -18,4 +18,4 @@ Displays dots-swe plugin version, installation path, last updated timestamp, and
 
 ## Implementation
 
-!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/version.sh 2>/dev/null | head -1)"
+!bash "$(ls -td ${DOTS_SWE_DEV:-/nonexistent}/scripts $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts 2>/dev/null | head -1)/version.sh"

@@ -44,4 +44,4 @@ Shows all `swe:code-complete` labeled beads and their integration readiness.
 
 ## Implementation
 
-!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/code-integrate-status.sh 2>/dev/null | head -1)"
+!bash "$(ls -td ${DOTS_SWE_DEV:-/nonexistent}/scripts $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts 2>/dev/null | head -1)/code-integrate-status.sh"

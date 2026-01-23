@@ -58,4 +58,4 @@ This command uses AppleScript to control terminals. If it fails to open tabs/win
 
 ## Implementation
 
-!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/dispatch.sh 2>/dev/null | head -1)" "$@"
+!bash "$(ls -td ${DOTS_SWE_DEV:-/nonexistent}/scripts $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts 2>/dev/null | head -1)/dispatch.sh" "$@"

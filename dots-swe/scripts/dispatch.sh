@@ -284,7 +284,7 @@ else
   HOOK_DIR="$WORKTREE_PATH/.git/hooks"
   HOOK_PATH="$HOOK_DIR/pre-commit"
   # Find the hook script in the plugin cache
-  HOOK_SCRIPT=$(ls -t $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/pre-commit-quality-hook.sh 2>/dev/null | head -1)
+  HOOK_SCRIPT=$(ls -t ${DOTS_SWE_DEV:-/nonexistent}/scripts/pre-commit-quality-hook.sh $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/pre-commit-quality-hook.sh 2>/dev/null | head -1)
 
   if [ -n "$HOOK_SCRIPT" ] && [ -f "$HOOK_SCRIPT" ]; then
     mkdir -p "$HOOK_DIR"

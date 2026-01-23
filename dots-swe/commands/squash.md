@@ -61,7 +61,7 @@ Results in one commit: `feat(auth): add OAuth integration`
 
 ## Implementation
 
-!source "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/swe-lib.sh 2>/dev/null | head -1)"
+!source "$(ls -td ${DOTS_SWE_DEV:-/nonexistent}/scripts $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts 2>/dev/null | head -1)/swe-lib.sh"
 
 # Help flag
 !if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

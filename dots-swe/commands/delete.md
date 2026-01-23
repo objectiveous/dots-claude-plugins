@@ -49,4 +49,4 @@ Delete one or more worktrees, including their branches, sessions, and beads.
 
 ## Implementation
 
-!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/delete.sh 2>/dev/null | head -1)" "$@"
+!bash "$(ls -td ${DOTS_SWE_DEV:-/nonexistent}/scripts $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts 2>/dev/null | head -1)/delete.sh" "$@"

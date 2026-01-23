@@ -33,4 +33,4 @@ Checks repository health: stale worktrees, uncommitted changes, unpushed commits
 
 ## Implementation
 
-!bash "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/doctor.sh 2>/dev/null | head -1)"
+!bash "$(ls -td ${DOTS_SWE_DEV:-/nonexistent}/scripts $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts 2>/dev/null | head -1)/doctor.sh"

@@ -120,7 +120,7 @@ get_integration_ready_beads
 
 ```bash
 # Source library
-source "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/lead-lib.sh 2>/dev/null | head -1)"
+source "$(ls -td ${DOTS_SWE_DEV:-/nonexistent}/scripts $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts 2>/dev/null | head -1)/lead-lib.sh"
 
 # Load state
 ACTIVE_COUNT=$(get_active_session_count)

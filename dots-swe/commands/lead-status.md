@@ -46,7 +46,7 @@ Shows the current state of the Lead agent including running status, active sessi
 
 ## Implementation
 
-!source "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/lead-lib.sh 2>/dev/null | head -1)"
+!source "$(ls -td ${DOTS_SWE_DEV:-/nonexistent}/scripts $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts 2>/dev/null | head -1)/lead-lib.sh"
 
 !echo "═══════════════════════════════════════════"
 !echo "LEAD AGENT STATUS"
