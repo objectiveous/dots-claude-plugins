@@ -52,7 +52,11 @@ fi
 # Show available work
 !echo "Available work:"
 !echo ""
-!bd ready 2>/dev/null || echo "  (bd command not available - is beads installed?)"
+!\(
+  for type in task bug feature chore; do
+    bd ready --type $type --limit 100 2>/dev/null
+  done | grep -E '^\[|^[0-9]+\.' | sort -u
+\) || echo "  (bd command not available - is beads installed?)"
 !echo ""
 
 !echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
