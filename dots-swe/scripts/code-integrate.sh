@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/swe-lib.sh"
 DRY_RUN=false
 FORCE=false
 NO_REMOTE=false
+VERBOSE=false
 MERGE_MODE=""
 BEAD_IDS=()
 
@@ -25,6 +26,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "  --dry-run, -n    Show what would happen without doing it"
   echo "  --force, -f      Skip merge verification (use with caution)"
   echo "  --no-remote      Skip remote branch deletion"
+  echo "  --verbose, -v    Show detailed git output for debugging"
   echo ""
   echo "Behavior:"
   echo "  Without bead IDs: processes ALL swe:code-complete beads"
@@ -70,6 +72,7 @@ for arg in "$@"; do
     --dry-run|-n) DRY_RUN=true ;;
     --force|-f) FORCE=true ;;
     --no-remote) NO_REMOTE=true ;;
+    --verbose|-v) VERBOSE=true ;;
     --local) MERGE_MODE="local" ;;
     --remote) MERGE_MODE="remote" ;;
     *) BEAD_IDS+=("$arg") ;;
@@ -163,7 +166,7 @@ for BEAD_ID in "${BEAD_IDS[@]}"; do
     else
       # Local merge workflow
       echo "   Merging locally to main with tests..."
-      MERGE_OUTPUT=$(merge_branch_to_main "$BEAD_ID" 2>&1)
+      MERGE_OUTPUT=$(merge_branch_to_main "$BEAD_ID" "$VERBOSE" 2>&1)
       MERGE_RESULT=$?
 
       if [ $MERGE_RESULT -eq 0 ]; then
@@ -180,8 +183,27 @@ for BEAD_ID in "${BEAD_IDS[@]}"; do
         fi
         echo ""
         continue
+      elif [ $MERGE_RESULT -eq 3 ]; then
+        echo "   ❌ Failed to checkout branch"
+        echo "$MERGE_OUTPUT" | sed 's/^/      /'
+        MERGE_FAILED+=("$BEAD_ID")
+        echo ""
+        continue
+      elif [ $MERGE_RESULT -eq 4 ]; then
+        echo "   ❌ Main branch has uncommitted changes"
+        echo "$MERGE_OUTPUT" | sed 's/^/      /'
+        MERGE_FAILED+=("$BEAD_ID")
+        echo ""
+        continue
+      elif [ $MERGE_RESULT -eq 5 ]; then
+        echo "   ❌ Main branch is out of sync with origin"
+        echo "$MERGE_OUTPUT" | sed 's/^/      /'
+        MERGE_FAILED+=("$BEAD_ID")
+        echo ""
+        continue
       else
-        echo "   ❌ Merge failed - may have conflicts"
+        echo "   ❌ Merge failed"
+        echo "$MERGE_OUTPUT" | sed 's/^/      /'
         MERGE_FAILED+=("$BEAD_ID")
         echo ""
         continue

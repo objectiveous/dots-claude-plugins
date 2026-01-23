@@ -1010,90 +1010,377 @@ create_or_find_pr() {
   return 1
 }
 
+# Pre-flight check: ensure main branch is clean and up-to-date
+#
+# This function validates that the main branch is in a good state before attempting
+# integration. It auto-fixes beads database changes and provides clear error messages
+# for issues that require manual intervention.
+#
+# Usage: check_main_branch_ready [verbose]
+#   verbose: Set to "true" to show full git output (default: "false")
+#
+# Returns:
+#   0: Main branch is ready for integration
+#   3: Failed to checkout main branch
+#   4: Main has uncommitted changes (excluding .beads/issues.jsonl)
+#   5: Main is behind origin/main
+#
+# Auto-fixes:
+#   - Commits .beads/issues.jsonl changes with timestamp message
+#
+# Checks performed:
+#   - Can checkout main branch
+#   - No uncommitted changes (except .beads/issues.jsonl which is auto-committed)
+#   - Main is up-to-date with origin/main (fetches latest)
+#   - Warns if main is ahead of origin/main
+check_main_branch_ready() {
+  local verbose="${1:-false}"
+  local beads_file=".beads/issues.jsonl"
+
+  # Save current branch
+  local current_branch=$(git branch --show-current)
+
+  # Switch to main to check status
+  if [ "$verbose" = "true" ]; then
+    git checkout main || return 3
+  else
+    git checkout main 2>/dev/null || {
+      echo "   ❌ Failed to checkout main branch" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 3
+    }
+  fi
+
+  # Check for uncommitted changes (excluding beads database)
+  local status_output
+  status_output=$(git status --porcelain 2>&1)
+
+  # Filter out beads database changes
+  local non_beads_changes
+  non_beads_changes=$(echo "$status_output" | grep -v "^.. $beads_file$" || true)
+
+  if [ -n "$non_beads_changes" ]; then
+    echo "   ❌ Main branch has uncommitted changes:" >&2
+    echo "$non_beads_changes" | sed 's/^/      /' >&2
+    echo "" >&2
+    echo "   To fix: commit or stash changes on main branch" >&2
+    git checkout "$current_branch" 2>/dev/null
+    return 4
+  fi
+
+  # Auto-commit beads changes if they're the only uncommitted files
+  if echo "$status_output" | grep -q "^.. $beads_file$"; then
+    echo "   📝 Auto-committing beads database changes..."
+    git add "$beads_file"
+    if [ "$verbose" = "true" ]; then
+      git commit -m "bd sync: $(date +%Y-%m-%d\ %H:%M:%S)"
+    else
+      git commit -m "bd sync: $(date +%Y-%m-%d\ %H:%M:%S)" 2>/dev/null
+    fi
+  fi
+
+  # Check if main is behind origin/main
+  if [ "$verbose" = "true" ]; then
+    git fetch origin main || {
+      echo "   ⚠️  Warning: Failed to fetch from origin" >&2
+    }
+  else
+    git fetch origin main 2>/dev/null || {
+      echo "   ⚠️  Warning: Failed to fetch from origin" >&2
+    }
+  fi
+
+  local local_commit=$(git rev-parse main 2>/dev/null)
+  local remote_commit=$(git rev-parse origin/main 2>/dev/null)
+
+  if [ "$local_commit" != "$remote_commit" ]; then
+    local behind_count=$(git rev-list --count main..origin/main 2>/dev/null)
+    local ahead_count=$(git rev-list --count origin/main..main 2>/dev/null)
+
+    if [ "$behind_count" -gt 0 ]; then
+      echo "   ❌ Main branch is $behind_count commit(s) behind origin/main" >&2
+      echo "" >&2
+      echo "   To fix: git checkout main && git pull origin main" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 5
+    fi
+
+    if [ "$ahead_count" -gt 0 ]; then
+      echo "   ⚠️  Warning: Main branch is $ahead_count commit(s) ahead of origin/main" >&2
+      echo "   Consider pushing: git push origin main" >&2
+    fi
+  fi
+
+  # Return to original branch
+  git checkout "$current_branch" 2>/dev/null
+  return 0
+}
+
+# Clean up stale integration branches
+#
+# Removes any existing integration branches that might be left from previous failed runs.
+# Integration branches follow the pattern: integrate/<branch-name>
+#
+# Usage: cleanup_stale_integration_branches <branch> [verbose]
+#   branch:  Name of the feature branch (used to derive integration branch name)
+#   verbose: Set to "true" to show full git output (default: "false")
+#
+# This prevents errors when creating a new integration branch if a previous integration
+# attempt failed and left the integration branch behind.
+cleanup_stale_integration_branches() {
+  local branch="$1"
+  local integration_branch="integrate/${branch}"
+  local verbose="${2:-false}"
+
+  # Check if integration branch exists
+  if git show-ref --verify --quiet "refs/heads/$integration_branch"; then
+    echo "   🧹 Cleaning up stale integration branch: $integration_branch"
+    if [ "$verbose" = "true" ]; then
+      git branch -D "$integration_branch"
+    else
+      git branch -D "$integration_branch" 2>/dev/null || {
+        echo "   ⚠️  Warning: Could not delete stale integration branch" >&2
+      }
+    fi
+  fi
+}
+
 # Merge branch to main locally with integration branch and tests
-# Returns: 0 if successful, 1 if merge failed, 2 if tests failed
-# Prints: "tests_failed:<integration-branch>" on test failure
+#
+# This function performs a safe merge with pre-flight checks, integration testing,
+# and automatic cleanup of integration branches.
+#
+# Usage: merge_branch_to_main <branch> [verbose]
+#   branch:  Name of the feature branch to merge
+#   verbose: Set to "true" to show full git output (default: "false")
+#
+# Returns:
+#   0: Success - branch merged, tests passed, pushed to origin
+#   1: Merge failed - conflicts detected or fast-forward merge failed
+#   2: Tests failed - integration branch preserved for debugging
+#   3: Checkout failed - could not switch to main or integration branch
+#   4: Pre-flight check failed - main has uncommitted changes (excluding .beads/issues.jsonl)
+#   5: Pre-flight check failed - main is behind origin/main
+#
+# Prints: "tests_failed:<integration-branch>" on test failure (for parsing)
+#
+# Pre-flight checks (run before merge):
+#   - Verifies main branch is clean (auto-commits beads database changes)
+#   - Checks if main is behind origin/main (fails if outdated)
+#   - Cleans up stale integration branches from previous failed runs
+#
+# Workflow:
+#   1. Run pre-flight checks on main branch
+#   2. Clean up any stale integration branches
+#   3. Create integration branch from latest main
+#   4. Merge feature branch into integration branch
+#   5. Run tests on integration branch
+#   6. If tests pass: merge to main, push to origin, cleanup
+#   7. If tests fail: preserve integration branch for debugging
 merge_branch_to_main() {
   local branch="$1"
+  local verbose="${2:-false}"
   local current_branch=$(git branch --show-current)
   local integration_branch="integrate/${branch}"
   local repo_root=$(get_repo_root)
 
-  echo "   Creating integration branch..."
+  # Pre-flight checks
+  echo "   🔍 Running pre-flight checks..."
+  if ! check_main_branch_ready "$verbose"; then
+    local check_result=$?
+    return $check_result
+  fi
+  echo "   ✅ Pre-flight checks passed"
+  echo ""
+
+  # Clean up any stale integration branches
+  cleanup_stale_integration_branches "$branch" "$verbose"
 
   # Switch to main and pull latest
-  git checkout main 2>/dev/null || return 1
-  git pull origin main 2>/dev/null || {
-    git checkout "$current_branch" 2>/dev/null
-    return 1
-  }
+  echo "   📥 Updating main branch..."
+  if [ "$verbose" = "true" ]; then
+    git checkout main || return 3
+    git pull origin main || {
+      echo "   ❌ Failed to pull from origin/main" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 5
+    }
+  else
+    git checkout main 2>/dev/null || {
+      echo "   ❌ Failed to checkout main branch" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 3
+    }
+    local pull_output
+    pull_output=$(git pull origin main 2>&1)
+    local pull_result=$?
+    if [ $pull_result -ne 0 ]; then
+      echo "   ❌ Failed to pull from origin/main" >&2
+      if [ "$verbose" = "true" ]; then
+        echo "$pull_output" | sed 's/^/      /' >&2
+      fi
+      git checkout "$current_branch" 2>/dev/null
+      return 5
+    fi
+  fi
 
   # Create integration branch from main
-  git checkout -b "$integration_branch" 2>/dev/null || {
-    # Branch might exist, try to use it
-    git checkout "$integration_branch" 2>/dev/null || {
+  echo "   🌿 Creating integration branch: $integration_branch"
+  if [ "$verbose" = "true" ]; then
+    git checkout -b "$integration_branch" || {
+      echo "   ❌ Failed to create integration branch" >&2
       git checkout "$current_branch" 2>/dev/null
       return 1
     }
-  }
+  else
+    git checkout -b "$integration_branch" 2>/dev/null || {
+      echo "   ❌ Failed to create integration branch" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 1
+    }
+  fi
 
   # Merge feature branch into integration branch
-  echo "   Merging $branch into $integration_branch..."
-  if ! git merge "$branch" --no-ff -m "Integrate branch '$branch'" 2>/dev/null; then
-    echo "   ❌ Merge conflict detected"
-    git merge --abort 2>/dev/null
-    git checkout "$current_branch" 2>/dev/null
-    git branch -D "$integration_branch" 2>/dev/null
-    return 1
+  echo "   🔀 Merging $branch into $integration_branch..."
+  local merge_output
+  if [ "$verbose" = "true" ]; then
+    if ! git merge "$branch" --no-ff -m "Integrate branch '$branch'"; then
+      echo "   ❌ Merge conflict detected" >&2
+      echo "" >&2
+      echo "   To resolve:" >&2
+      echo "   1. Manually resolve conflicts in integration branch" >&2
+      echo "   2. git checkout $integration_branch" >&2
+      echo "   3. Fix conflicts and commit" >&2
+      echo "   4. Merge $integration_branch to main manually" >&2
+      git merge --abort
+      git checkout "$current_branch" 2>/dev/null
+      git branch -D "$integration_branch" 2>/dev/null
+      return 1
+    fi
+  else
+    merge_output=$(git merge "$branch" --no-ff -m "Integrate branch '$branch'" 2>&1)
+    if [ $? -ne 0 ]; then
+      echo "   ❌ Merge conflict detected" >&2
+      echo "$merge_output" | grep "CONFLICT" | sed 's/^/      /' >&2
+      echo "" >&2
+      echo "   To resolve:" >&2
+      echo "   1. git checkout $integration_branch" >&2
+      echo "   2. Fix conflicts and commit" >&2
+      echo "   3. Merge $integration_branch to main manually" >&2
+      git merge --abort 2>/dev/null
+      git checkout "$current_branch" 2>/dev/null
+      git branch -D "$integration_branch" 2>/dev/null
+      return 1
+    fi
   fi
 
   # Run tests on integration branch
-  echo "   Running tests on integration branch..."
+  echo "   🧪 Running tests on integration branch..."
 
   # Detect project commands
   eval "$(detect_project_commands)"
 
   if [ -n "$TEST_CMD" ]; then
-    if eval "$TEST_CMD" 2>&1 | sed 's/^/     /'; then
-      echo "   ✅ Tests passed"
+    if [ "$verbose" = "true" ]; then
+      if eval "$TEST_CMD"; then
+        echo "   ✅ Tests passed"
+      else
+        echo "   ❌ Tests failed on integration branch" >&2
+        echo "   Integration branch '$integration_branch' preserved for debugging" >&2
+        echo "" >&2
+        echo "   To fix:" >&2
+        echo "   1. git checkout $integration_branch" >&2
+        echo "   2. Fix failing tests" >&2
+        echo "   3. Run tests: $TEST_CMD" >&2
+        echo "   4. Merge to main: git checkout main && git merge $integration_branch" >&2
+        git checkout "$current_branch" 2>/dev/null
+        echo "tests_failed:$integration_branch"
+        return 2
+      fi
     else
-      echo "   ❌ Tests failed on integration branch"
-      echo "   Integration branch '$integration_branch' preserved for debugging"
-      echo "   To fix: checkout $integration_branch, fix tests, then merge to main manually"
-      git checkout "$current_branch" 2>/dev/null
-      echo "tests_failed:$integration_branch"
-      return 2
+      if eval "$TEST_CMD" > /dev/null 2>&1; then
+        echo "   ✅ Tests passed"
+      else
+        echo "   ❌ Tests failed on integration branch" >&2
+        echo "   Integration branch '$integration_branch' preserved for debugging" >&2
+        echo "" >&2
+        echo "   To fix:" >&2
+        echo "   1. git checkout $integration_branch" >&2
+        echo "   2. Fix failing tests" >&2
+        echo "   3. Run tests: $TEST_CMD" >&2
+        echo "   4. Merge to main: git checkout main && git merge $integration_branch" >&2
+        git checkout "$current_branch" 2>/dev/null
+        echo "tests_failed:$integration_branch"
+        return 2
+      fi
     fi
   else
     echo "   ⚠️  No test command detected, skipping tests"
   fi
 
   # Tests passed, merge integration branch to main
-  echo "   Merging $integration_branch to main..."
-  git checkout main 2>/dev/null || {
-    git checkout "$current_branch" 2>/dev/null
-    return 1
-  }
-
-  if ! git merge "$integration_branch" --ff-only 2>/dev/null; then
-    echo "   ❌ Fast-forward merge failed (this shouldn't happen)"
-    git checkout "$current_branch" 2>/dev/null
-    return 1
+  echo "   ✅ Merging $integration_branch to main..."
+  if [ "$verbose" = "true" ]; then
+    git checkout main || {
+      echo "   ❌ Failed to checkout main" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 3
+    }
+    if ! git merge "$integration_branch" --ff-only; then
+      echo "   ❌ Fast-forward merge failed (this shouldn't happen)" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 1
+    fi
+  else
+    git checkout main 2>/dev/null || {
+      echo "   ❌ Failed to checkout main" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 3
+    }
+    if ! git merge "$integration_branch" --ff-only 2>/dev/null; then
+      echo "   ❌ Fast-forward merge failed (this shouldn't happen)" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 1
+    fi
   fi
 
   # Push to origin
-  echo "   Pushing main to origin..."
-  if ! git push origin main 2>/dev/null; then
-    echo "   ❌ Push failed"
-    git checkout "$current_branch" 2>/dev/null
-    return 1
+  echo "   📤 Pushing main to origin..."
+  if [ "$verbose" = "true" ]; then
+    if ! git push origin main; then
+      echo "   ❌ Push failed" >&2
+      echo "" >&2
+      echo "   Main branch has been updated locally but not pushed to origin" >&2
+      echo "   To retry: git push origin main" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 1
+    fi
+  else
+    local push_output
+    push_output=$(git push origin main 2>&1)
+    if [ $? -ne 0 ]; then
+      echo "   ❌ Push failed" >&2
+      echo "$push_output" | sed 's/^/      /' >&2
+      echo "" >&2
+      echo "   Main branch has been updated locally but not pushed to origin" >&2
+      echo "   To retry: git push origin main" >&2
+      git checkout "$current_branch" 2>/dev/null
+      return 1
+    fi
   fi
 
   # Clean up integration branch
-  git branch -D "$integration_branch" 2>/dev/null
+  echo "   🧹 Cleaning up integration branch..."
+  if [ "$verbose" = "true" ]; then
+    git branch -D "$integration_branch"
+  else
+    git branch -D "$integration_branch" 2>/dev/null
+  fi
 
   # Return to original branch
   git checkout "$current_branch" 2>/dev/null
+
+  echo "   ✅ Integration complete"
   return 0
 }
 
