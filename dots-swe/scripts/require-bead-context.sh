@@ -29,6 +29,24 @@ if [[ -n "$(find "$BYPASS_DIR" -name 'swe-bead-bypass-*' -mtime -60s 2>/dev/null
     exit 0
 fi
 
+# Check if the file path should be excluded from bead tracking
+# Read JSON input from stdin and extract file_path
+INPUT=$(cat)
+FILE_PATH=$(echo "$INPUT" | grep -o '"file_path":"[^"]*"' | cut -d'"' -f4 || echo "")
+
+if [[ -n "$FILE_PATH" ]]; then
+    # Expand ~ to home directory for comparison
+    EXPANDED_PATH="${FILE_PATH/#\~/$HOME}"
+
+    # Paths that don't need bead tracking
+    if [[ "$EXPANDED_PATH" == "$HOME/.claude/plans/"* ]] || \
+       [[ "$EXPANDED_PATH" == *"/.beads/"* ]] || \
+       [[ "$EXPANDED_PATH" == *"/.claude-plugin/"* ]]; then
+        echo '{"continue": true}'
+        exit 0
+    fi
+fi
+
 # Not in bead context and no bypass - soft block
 cat <<'EOF'
 {
