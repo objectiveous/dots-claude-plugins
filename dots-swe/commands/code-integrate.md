@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(bash:*)
+allowed-tools: Bash
 description: Integrate code to main and clean up resources
 ---
 

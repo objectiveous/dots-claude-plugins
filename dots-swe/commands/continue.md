@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(bash:*), Bash(zmx:*), Bash(tmux:*), AskUserQuestion
+allowed-tools: Bash, AskUserQuestion
 description: Continue work on an existing bead - reattach to session
 ---
 

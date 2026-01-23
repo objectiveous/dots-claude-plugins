@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(bash:*)
+allowed-tools: Bash
 description: Show work ready for integration after merge
 execution-mode: atomic-bash
 ---

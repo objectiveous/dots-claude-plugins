@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(bash:*)
+allowed-tools: Bash
 description: Delete worktrees and clean up associated resources
 execution-mode: atomic-bash
 ---
