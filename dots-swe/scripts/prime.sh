@@ -26,6 +26,33 @@ if [ -n "$BEAD_ID" ]; then
   CONTEXT+="## Current Task: $BEAD_ID\n\n"
 fi
 
+# 1.5. Show bead hierarchy (Go! announcement)
+if [ -n "$BEAD_ID" ] && command -v bd >/dev/null 2>&1; then
+  # Get bead info for announcement (using direct pipes to avoid JSON escaping issues)
+  TITLE=$(bd show "$BEAD_ID" --json 2>/dev/null | jq -r '.[0].title // ""' 2>/dev/null || echo "")
+  DESCRIPTION=$(bd show "$BEAD_ID" --json 2>/dev/null | jq -r '.[0].description // ""' 2>/dev/null || echo "")
+  TYPE=$(bd show "$BEAD_ID" --json 2>/dev/null | jq -r '.[0].issue_type // "task"' 2>/dev/null || echo "task")
+
+  if [ -n "$TITLE" ]; then
+    # Get hierarchy
+    if declare -f get_bead_hierarchy >/dev/null 2>&1; then
+      HIERARCHY=$(get_bead_hierarchy "$BEAD_ID" 2>/dev/null || echo "")
+
+      if [ -n "$HIERARCHY" ]; then
+        CONTEXT+="🎯 **Working on bead hierarchy:**\n\n"
+        CONTEXT+="$HIERARCHY\n\n"
+      fi
+    fi
+
+    # Add brief description for context
+    if [ -n "$DESCRIPTION" ]; then
+      FIRST_LINE=$(echo "$DESCRIPTION" | head -1)
+      CONTEXT+="**About this $TYPE:** $FIRST_LINE\n\n"
+      CONTEXT+="---\n\n"
+    fi
+  fi
+fi
+
 # 2. Load task context if available
 if [ -f ".swe-context" ]; then
   CONTEXT+="$(cat .swe-context)\n\n"
