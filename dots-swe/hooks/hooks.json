@@ -22,6 +22,15 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/require-bead-context.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/block-bead-close.sh"
+          }
+        ]
       }
     ]
   }
