@@ -350,6 +350,7 @@ get_design_beads() {
   # Look for beads with swe:needs-design label
   bd list --label=swe:needs-design 2>/dev/null | \
     grep -v 'swe:design-complete' | \
+    grep -oE '^[○◐●✓] [a-z]+-[a-z0-9]+(\.[0-9]+)*' | \
     grep -oE '[a-z]+-[a-z0-9]+(\.[0-9]+)*' | sort -u
 }
 
@@ -357,6 +358,7 @@ get_design_beads() {
 get_design_complete_beads() {
   # Look for beads with swe:design-complete label
   bd list --label=swe:design-complete 2>/dev/null | \
+    grep -oE '^[○◐●✓] [a-z]+-[a-z0-9]+(\.[0-9]+)*' | \
     grep -oE '[a-z]+-[a-z0-9]+(\.[0-9]+)*' | sort -u
 }
 
