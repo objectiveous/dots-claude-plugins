@@ -235,6 +235,16 @@ fi
 echo "✅ Worktree created"
 echo ""
 
+# Initialize submodules if they exist
+if [ -f "$WORKTREE_PATH/.gitmodules" ]; then
+  echo "Initializing git submodules..."
+  (cd "$WORKTREE_PATH" && git submodule update --init --recursive) || {
+    echo "⚠️  Failed to initialize submodules (continuing anyway)"
+  }
+  echo "✅ Submodules initialized"
+  echo ""
+fi
+
 # Copy .claude directory
 if [ -d "$REPO_ROOT/.claude" ]; then
   cp -r "$REPO_ROOT/.claude" "$WORKTREE_PATH/"
