@@ -17,15 +17,12 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    Deleting Worktrees                        ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo "Deleting Worktrees"
 echo ""
 
 # Use the delete_worktrees function from swe-lib.sh
 delete_worktrees "$@"
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Deletion complete!"
 echo ""
 echo "To reopen beads, use: /dots-swe:dispatch <bead-id>"

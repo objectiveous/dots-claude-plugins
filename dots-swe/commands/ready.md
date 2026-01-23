@@ -35,17 +35,13 @@ Shows truly dispatchable work - leaf tasks with no open children and no blockers
 
 !source "$(ls -td $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/swe-lib.sh 2>/dev/null | head -1)"
 
-!echo "╔══════════════════════════════════════════════════════════════╗"
-!echo "║                 Dispatchable Work (Ready)                    ║"
-!echo "╚══════════════════════════════════════════════════════════════╝"
+!echo "Dispatchable Work (Ready)"
 !echo ""
 
 # Show current bead if in a worktree
 !CURRENT_BEAD=$(get_current_bead)
 !if [ -n "$CURRENT_BEAD" ]; then
   echo "Current bead: $CURRENT_BEAD"
-  echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
 fi
 

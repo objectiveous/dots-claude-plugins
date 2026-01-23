@@ -4,9 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/swe-lib.sh"
 
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    dots-swe Plugin Version                   ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo "dots-swe Plugin Version"
 echo ""
 
 # Find plugin installation path
@@ -24,9 +22,7 @@ else
   DESCRIPTION="unknown"
 fi
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Plugin Information"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "Name:        $PLUGIN_NAME"
 echo "Version:     $VERSION"
@@ -67,9 +63,7 @@ if [ -d "$PLUGIN_ROOT/.git" ]; then
 fi
 
 # Dependencies and requirements
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Dependencies & Requirements"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 check_dependency() {
@@ -101,7 +95,6 @@ check_dependency "zmx" "zmx (session manager)" "--version" || true
 check_dependency "tmux" "tmux (session manager)" "-V" || true
 
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "For help, run: /dots-swe:help"
 echo ""

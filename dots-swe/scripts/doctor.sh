@@ -4,18 +4,14 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/swe-lib.sh"
 
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    Repository Health Check                   ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo "Repository Health Check"
 echo ""
 
 REPO_ROOT=$(get_repo_root)
 ISSUES_FOUND=0
 
 # Check 1: Main branch status
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Main Branch Status"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 CURRENT_BRANCH=$(git branch --show-current)
@@ -42,9 +38,7 @@ fi
 echo ""
 
 # Check 2: Uncommitted changes
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Uncommitted Changes"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 CHANGES=$(git status --porcelain | wc -l | tr -d ' ')
@@ -58,9 +52,7 @@ fi
 echo ""
 
 # Check 3: Worktrees with uncommitted changes
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Worktree Status"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 WORKTREE_ISSUES=0
@@ -91,9 +83,7 @@ fi
 echo ""
 
 # Check 4: Beads sync
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Beads Sync Status"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 BEADS_SYNC_CONFIGURED=false
@@ -126,9 +116,7 @@ fi
 echo ""
 
 # Check 5: Quality hook installation
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Quality Hook Status"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 HOOK_PATH="$REPO_ROOT/.git/hooks/pre-commit"
@@ -148,9 +136,7 @@ fi
 echo ""
 
 # Summary
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Summary"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 if [ "$ISSUES_FOUND" -eq 0 ]; then

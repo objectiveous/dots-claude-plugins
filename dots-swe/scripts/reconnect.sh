@@ -37,9 +37,7 @@ for arg in "$@"; do
   esac
 done
 
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║              Reconnecting to All Worktrees                   ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo "Reconnecting to All Worktrees"
 echo ""
 
 REPO_ROOT=$(get_repo_root)
@@ -177,7 +175,6 @@ if [ ${#NEW_SESSIONS[@]} -gt 0 ]; then
 fi
 
 # Open tabs for ALL worktrees
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Opening terminals for all worktrees..."
 echo ""
 
@@ -213,7 +210,6 @@ else
 fi
 
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Reconnected to $TOTAL_COUNT worktree(s)"
 echo ""
 
