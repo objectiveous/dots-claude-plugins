@@ -51,6 +51,7 @@ Software engineering tools for Claude Code - work management, beads integration,
 | Command | Description |
 |---------|-------------|
 | `/dots-swe:help` | Show this help |
+| `/dots-swe:version` | Check plugin version and dependencies |
 
 ## Workflow
 
