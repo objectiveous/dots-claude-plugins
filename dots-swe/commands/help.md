@@ -11,6 +11,14 @@ Software engineering tools for Claude Code - work management, beads integration,
 
 ## Commands
 
+### Lead Agent (Autonomous Orchestration)
+
+| Command | Description |
+|---------|-------------|
+| `/dots-swe:lead-start` | Start Lead agent for autonomous work orchestration |
+| `/dots-swe:lead-status` | Show Lead agent status and active orchestration state |
+| `/dots-swe:lead-stop` | Stop Lead agent gracefully |
+
 ### Work Management
 
 | Command | Description |
@@ -91,6 +99,41 @@ Software engineering tools for Claude Code - work management, beads integration,
 # Later, continue with:
 /dots-swe:continue dots-abc
 ```
+
+## Lead Agent Workflow (Autonomous Orchestration)
+
+The Lead agent automates work orchestration by running a continuous loop:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  /dots-swe:lead-start    # Start Lead agent in new terminal │
+│       ↓                                                     │
+│  Lead Loop (every 60s):                                     │
+│    • ASSESS:     Check state, find work                     │
+│    • DISPATCH:   Start SWE agents (up to 3 concurrent)      │
+│    • MONITOR:    Detect stalls, blockers, crashes           │
+│    • INTEGRATE:  Auto-merge completed work                  │
+│    • ESCALATE:   Send desktop notifications                 │
+│       ↓                                                     │
+│  ... Lead runs continuously, managing SWE agents ...         │
+│       ↓                                                     │
+│  /dots-swe:lead-status   # Check current state              │
+│  /dots-swe:lead-stop     # Stop when done                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Escalation Types (Desktop Notifications):**
+- **BLOCKER** - SWE marked bead as blocked
+- **STALL** - No activity for 30+ minutes
+- **CONFLICT** - Merge conflict during integration
+- **TEST_FAILURE** - Integration tests failed
+- **CRASH** - Session died unexpectedly
+
+**Configuration (Environment Variables):**
+- `SWE_MAX_PARALLEL=3` - Max concurrent SWE agents
+- `SWE_LOOP_INTERVAL=60` - Seconds between cycles
+- `SWE_STALL_MINUTES=30` - Stall detection threshold
+- `SWE_AUTO_INTEGRATE=true` - Auto-merge completed work
 
 ## Terminal Support
 
