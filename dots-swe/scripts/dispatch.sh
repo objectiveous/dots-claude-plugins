@@ -279,18 +279,26 @@ echo ""
 
 # Install quality hook
 echo "Installing quality hook..."
-HOOK_DIR="$WORKTREE_PATH/.git/hooks"
-HOOK_PATH="$HOOK_DIR/pre-commit"
-# Find the hook script in the plugin cache
-HOOK_SCRIPT=$(ls -t $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/pre-commit-quality-hook.sh 2>/dev/null | head -1)
 
-if [ -n "$HOOK_SCRIPT" ] && [ -f "$HOOK_SCRIPT" ]; then
-  mkdir -p "$HOOK_DIR"
-  cp "$HOOK_SCRIPT" "$HOOK_PATH"
-  chmod +x "$HOOK_PATH"
-  echo "✅ Quality hook installed"
+# Check if we're in a worktree (.git is a file) or main repo (.git is a directory)
+if [ -f "$WORKTREE_PATH/.git" ]; then
+  # In a worktree - hooks are shared from main repo
+  echo "✅ Using shared hooks from main repo"
 else
-  echo "⚠️  Could not find quality hook script (continuing anyway)"
+  # In main repo - install hook locally
+  HOOK_DIR="$WORKTREE_PATH/.git/hooks"
+  HOOK_PATH="$HOOK_DIR/pre-commit"
+  # Find the hook script in the plugin cache
+  HOOK_SCRIPT=$(ls -t $HOME/.claude/plugins/cache/dots-claude-plugins/dots-swe/*/scripts/pre-commit-quality-hook.sh 2>/dev/null | head -1)
+
+  if [ -n "$HOOK_SCRIPT" ] && [ -f "$HOOK_SCRIPT" ]; then
+    mkdir -p "$HOOK_DIR"
+    cp "$HOOK_SCRIPT" "$HOOK_PATH"
+    chmod +x "$HOOK_PATH"
+    echo "✅ Quality hook installed"
+  else
+    echo "⚠️  Could not find quality hook script (continuing anyway)"
+  fi
 fi
 echo ""
 
