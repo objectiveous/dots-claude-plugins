@@ -201,12 +201,13 @@ bd close dots-abc-123
 # Agent: "Implementation complete!"
 ```
 
-✅ **CORRECT: Code-complete, verify, then close**
+✅ **CORRECT: Code-complete, then integration**
 ```bash
 git commit -m "feat: add feature"
 /dots-swe:code-complete           # ← REQUIRED STEP
 # ... code-complete runs quality gates, pushes, labels ...
-bd close dots-abc-123              # Only after code-complete succeeds
+# Bead is now ready for integration (usually done later/separate session)
+# /dots-swe:code-integrate will merge to main and close the bead
 ```
 
 ### Why This Matters
@@ -286,10 +287,8 @@ git status  # Should show clean
 # Title:  Add user authentication
 # Status: ready for integration
 
-# 4. Only now: close the bead
-bd close dots-abc-123
-
-# 5. Integration (usually separate session/later)
+# 4. Integration (usually separate session/later)
+# This merges to main and closes the bead
 /dots-swe:code-integrate dots-abc-123
 ```
 
@@ -475,7 +474,7 @@ Before closing a bead, follow these steps:
 
 2. **If code-complete succeeds**:
    - Verify bead has `swe:code-complete` label
-   - Close the bead: `bd close <bead-id>`
+   - Bead is now ready for integration (done by /dots-swe:code-integrate)
    - Summarize completion (see template below)
 
 3. **If code-complete fails**:
