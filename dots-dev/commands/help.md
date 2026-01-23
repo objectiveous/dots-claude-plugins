@@ -22,10 +22,7 @@ Shows all available commands and agents in the dots-dev plugin.
   exit 0
 fi
 
-!echo "╔══════════════════════════════════════════════════════════════╗"
-!echo "║                     dots-dev Plugin                          ║"
-!echo "║        Developer tools for Dots Workbench                    ║"
-!echo "╚══════════════════════════════════════════════════════════════╝"
+!echo "dots-dev Plugin - Developer tools for Dots Workbench"
 !echo ""
 
 !echo "WORKTREE MANAGEMENT"

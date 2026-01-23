@@ -32,9 +32,7 @@ Checks for common issues: stale branches, uncommitted work, orphaned worktrees, 
   exit 0
 fi
 
-!echo "╔══════════════════════════════════════════════════════════════╗"
-!echo "║                     dots-dev Doctor                          ║"
-!echo "╚══════════════════════════════════════════════════════════════╝"
+!echo "dots-dev Doctor"
 !echo ""
 
 !ISSUES_FOUND=0
@@ -146,7 +144,6 @@ fi
 !echo ""
 
 # Summary
-!echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 !if [ "$ISSUES_FOUND" -gt 0 ]; then
   echo "Found potential issues. See recommendations above."
 else

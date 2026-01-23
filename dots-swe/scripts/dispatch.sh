@@ -105,15 +105,11 @@ for BEAD_ID in "${BEAD_IDS[@]}"; do
   BEAD_COUNT=$((BEAD_COUNT + 1))
   if [ ${#BEAD_IDS[@]} -gt 1 ]; then
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "Dispatching: $BEAD_ID ($BEAD_COUNT of ${#BEAD_IDS[@]})"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
   fi
 
-  echo "╔══════════════════════════════════════════════════════════════╗"
-  echo "║                  Starting Work from Bead                     ║"
-  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo "Starting Work from Bead"
   echo ""
   echo "Bead ID: $BEAD_ID"
   echo ""
@@ -187,7 +183,6 @@ if [ "$DRY_RUN" = true ]; then
   fi
 
   echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "Run without --dry-run to execute"
   echo "Add --window to open in a Ghostty window instead of tab"
   exit 0
@@ -317,7 +312,6 @@ echo "Opening Claude session ($TERMINAL)..."
 ABS_PATH="$(cd "$WORKTREE_PATH" && pwd)"
 register_worktree "$ABS_PATH" "$BEAD_ID" "$BEAD_ID"
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Ready to work!"
 echo ""
 echo "Worktree: $WORKTREE_PATH"
@@ -351,7 +345,5 @@ done
 # Summary if multiple beads
 if [ ${#BEAD_IDS[@]} -gt 1 ]; then
   echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "✅ Dispatched ${#BEAD_IDS[@]} beads successfully"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 fi

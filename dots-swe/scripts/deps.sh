@@ -61,15 +61,11 @@ fi
 # Mode 1: Project Overview (no bead ID specified)
 # =============================================================================
 if [ -z "$BEAD_ID" ]; then
-  echo "╔══════════════════════════════════════════════════════════════╗"
-  echo "║              Project Dependency Overview                     ║"
-  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo "Project Dependency Overview"
   echo ""
 
   # Show active epics with their child tasks
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "🎯 Active Epics"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
 
   OPEN_EPICS=$(bd list --type=epic --status=open 2>/dev/null | grep "^[a-z]" || echo "")
@@ -93,9 +89,7 @@ if [ -z "$BEAD_ID" ]; then
   fi
 
   # Show blocked issues summary
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "🚫 Blocked Issues"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
 
   BLOCKED=$(bd blocked 2>/dev/null | grep "^[a-z]" || echo "")
@@ -118,9 +112,7 @@ if [ -z "$BEAD_ID" ]; then
   echo ""
 
   # Show ready to work summary
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "✅ Ready to Work (No Blockers)"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
 
   READY_WORK=$(bd ready 2>/dev/null | grep "^[a-z]" || echo "")
@@ -143,9 +135,7 @@ if [ -z "$BEAD_ID" ]; then
   echo ""
 
   # Show tip
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "💡 Tip"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
   echo "  Use: /dots-swe:deps <bead-id> to see detailed dependency tree"
   echo "  Use: /dots-swe:deps <bead-id> --mermaid for documentation diagrams"
@@ -210,9 +200,7 @@ BEAD_INFO=$(bd show "$BEAD_ID" 2>/dev/null)
 PARENT_INFO=$(echo "$BEAD_INFO" | grep "^DEPENDS ON" -A1 | grep "parent-child\|epic" || echo "")
 
 if [ -n "$PARENT_INFO" ]; then
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "📊 Context"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
   echo "  Part of epic/parent:"
   echo "$PARENT_INFO" | sed 's/^/    /'

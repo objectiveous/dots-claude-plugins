@@ -23,9 +23,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   exit 0
 fi
 
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║              Code Integration Status                         ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo "Code Integration Status"
 echo ""
 
 # Get all beads with swe:code-complete label
@@ -43,9 +41,7 @@ MERGED_COUNT=0
 WAITING_COUNT=0
 NO_PR_COUNT=0
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🏁 Work Completed (swe:code-complete)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 # Parse JSON and process each bead
@@ -94,9 +90,7 @@ echo "$BEADS" | jq -c '.[]' | while IFS= read -r bead_json; do
 done
 
 # Summary
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📊 Summary"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 # Count totals (re-parse since subshell)
