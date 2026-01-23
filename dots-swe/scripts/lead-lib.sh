@@ -345,6 +345,23 @@ get_integration_ready_beads() {
     grep -oE '[a-z]+-[a-z0-9]+(\.[0-9]+)*' | sort -u
 }
 
+# Get design beads (swe:needs-design label)
+get_design_beads() {
+  # Look for beads with swe:needs-design label
+  bd list --label=swe:needs-design 2>/dev/null | \
+    grep -v 'swe:design-complete' | \
+    grep -oE '^[○◐●✓] [a-z]+-[a-z0-9]+(\.[0-9]+)*' | \
+    grep -oE '[a-z]+-[a-z0-9]+(\.[0-9]+)*' | sort -u
+}
+
+# Get design beads marked complete (swe:design-complete label)
+get_design_complete_beads() {
+  # Look for beads with swe:design-complete label
+  bd list --label=swe:design-complete 2>/dev/null | \
+    grep -oE '^[○◐●✓] [a-z]+-[a-z0-9]+(\.[0-9]+)*' | \
+    grep -oE '[a-z]+-[a-z0-9]+(\.[0-9]+)*' | sort -u
+}
+
 # Check if bead is blocked
 is_bead_blocked() {
   local bead_id="$1"
