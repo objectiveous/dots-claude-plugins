@@ -17,6 +17,13 @@ if [ ! -f ".swe-bead" ]; then
   exit 0
 fi
 
+# Sync beads database from JSONL (worktrees may have stale db)
+if [ -f ".beads/issues.jsonl" ]; then
+  bd sync --import-only >/dev/null 2>&1 || {
+    echo "Warning: Failed to sync beads database" >&2
+  }
+fi
+
 # Build context message
 CONTEXT=""
 
