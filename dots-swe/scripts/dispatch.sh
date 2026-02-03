@@ -329,6 +329,13 @@ TERMINAL=$(get_swe_terminal)
 if [ "$TERMINAL" = "ghostty" ]; then
   echo "Starting zmx session with model: $MODEL"
   start_zmx_session_background "$WORKTREE_PATH" "$BEAD_ID" false "$MODEL"
+
+  # Wait for session to be ready before attempting to attach
+  if ! wait_for_zmx_session "$BEAD_ID"; then
+    echo "ERROR: zmx session '$BEAD_ID' failed to start within timeout" >&2
+    exit 1
+  fi
+  echo "zmx session ready"
 fi
 
 # Open terminal and attach to session

@@ -343,6 +343,24 @@ open_ghostty_zmx_session() {
   esac
 }
 
+# Wait for zmx session to be ready
+# Usage: wait_for_zmx_session <session_name>
+# Returns: 0 if session is ready, 1 if timeout
+wait_for_zmx_session() {
+  local session_name="$1"
+  local max_attempts=30
+  local attempt=0
+
+  while [ $attempt -lt $max_attempts ]; do
+    if zmx list 2>/dev/null | grep -q "session_name=$session_name"; then
+      return 0
+    fi
+    sleep 0.1
+    attempt=$((attempt + 1))
+  done
+  return 1
+}
+
 # Start Claude in background zmx session (for batch operations)
 # Usage: start_zmx_session_background <worktree_path> <session_name> [no_auto] [model]
 start_zmx_session_background() {
@@ -350,18 +368,26 @@ start_zmx_session_background() {
   local session_name="$2"
   local no_auto="${3:-false}"  # optional: prevent auto-start
   local model="${4:-sonnet}"   # optional: model (sonnet, opus, haiku)
-  local abs_path claude_opts
+  local abs_path claude_opts output
 
   abs_path="$(cd "$worktree_path" && pwd)"
 
   if [ "$no_auto" = "true" ]; then
     # Start Claude without automatic prompts - waits for human input
     # Use --dangerously-skip-permissions but NOT --model to avoid auto-start
-    (cd "$abs_path" && zmx run "$session_name" claude --dangerously-skip-permissions)
+    output=$(cd "$abs_path" && zmx run "$session_name" claude --dangerously-skip-permissions 2>&1)
+    if [ $? -ne 0 ]; then
+      echo "ERROR: zmx run failed: $output" >&2
+      return 1
+    fi
   else
     # Normal start with full options
     claude_opts=$(get_claude_options "$model")
-    (cd "$abs_path" && zmx run "$session_name" claude "Go!" $claude_opts)
+    output=$(cd "$abs_path" && zmx run "$session_name" claude "Go!" $claude_opts 2>&1)
+    if [ $? -ne 0 ]; then
+      echo "ERROR: zmx run failed: $output" >&2
+      return 1
+    fi
   fi
 }
 
